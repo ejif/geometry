@@ -11,6 +11,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 
 import io.github.ejif.geometry.Point;
@@ -34,14 +35,14 @@ public final class VoronoiTest {
             .add(new TestCase(
                 ImmutableList.<Point> builder()
                     .build(),
-                new VoronoiDiagram(ImmutableList.<Border> builder()
+                new VoronoiDiagram(ImmutableSet.<Border> builder()
                     .build())))
 
             .add(new TestCase(
                 ImmutableList.<Point> builder()
                     .add(new Point(0, 0))
                     .build(),
-                new VoronoiDiagram(ImmutableList.<Border> builder()
+                new VoronoiDiagram(ImmutableSet.<Border> builder()
                     .build())))
 
             .add(new TestCase(
@@ -49,7 +50,7 @@ public final class VoronoiTest {
                     .add(new Point(0, 0))
                     .add(new Point(100, 0))
                     .build(),
-                new VoronoiDiagram(ImmutableList.<Border> builder()
+                new VoronoiDiagram(ImmutableSet.<Border> builder()
                     .add(new Border(PointPair.of(0, 1), null, null))
                     .build())))
 
@@ -70,7 +71,7 @@ public final class VoronoiTest {
                     .add(new Point(100, 0))
                     .add(new Point(100, 100))
                     .build(),
-                new VoronoiDiagram(ImmutableList.<Border> builder()
+                new VoronoiDiagram(ImmutableSet.<Border> builder()
                     .add(new Border(PointPair.of(0, 1), null, new Point(50, 50)))
                     .add(new Border(PointPair.of(0, 2), new Point(50, 50), null))
                     .add(new Border(PointPair.of(1, 2), null, new Point(50, 50)))
@@ -94,11 +95,37 @@ public final class VoronoiTest {
                     .add(new Point(100, 100))
                     .add(new Point(0, 100))
                     .build(),
-                new VoronoiDiagram(ImmutableList.<Border> builder()
+                new VoronoiDiagram(ImmutableSet.<Border> builder()
                     .add(new Border(PointPair.of(0, 1), null, new Point(50, 50)))
                     .add(new Border(PointPair.of(1, 2), null, new Point(50, 50)))
                     .add(new Border(PointPair.of(2, 3), null, new Point(50, 50)))
                     .add(new Border(PointPair.of(0, 3), new Point(50, 50), null))
+                    .build())))
+
+            /**
+             * <pre>
+             * \      |
+             *  \   2 | 3
+             *   \    |
+             *    .___.
+             *    |    \
+             *  0 | 1   \
+             *    |      \
+             * </pre>
+             */
+            .add(new TestCase(
+                ImmutableList.<Point> builder()
+                    .add(new Point(0, 0))
+                    .add(new Point(100, 0))
+                    .add(new Point(100, 100))
+                    .add(new Point(200, 100))
+                    .build(),
+                new VoronoiDiagram(ImmutableSet.<Border> builder()
+                    .add(new Border(PointPair.of(0, 1), null, new Point(50, 50)))
+                    .add(new Border(PointPair.of(0, 2), new Point(50, 50), null))
+                    .add(new Border(PointPair.of(1, 2), new Point(150, 50), new Point(50, 50)))
+                    .add(new Border(PointPair.of(1, 3), null, new Point(150, 50)))
+                    .add(new Border(PointPair.of(2, 3), new Point(150, 50), null))
                     .build())))
 
             .build();

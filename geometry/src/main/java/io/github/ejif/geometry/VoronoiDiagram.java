@@ -1,7 +1,7 @@
 
 package io.github.ejif.geometry;
 
-import java.util.List;
+import java.util.Set;
 
 import com.google.common.base.Preconditions;
 
@@ -13,7 +13,7 @@ import lombok.RequiredArgsConstructor;
 @Data
 public final class VoronoiDiagram {
 
-    private final List<Border> borders;
+    private final Set<Border> borders;
 
     /**
      * A border between two points in the Voronoi diagram. The order of start and end is such that

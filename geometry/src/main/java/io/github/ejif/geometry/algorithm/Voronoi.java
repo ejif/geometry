@@ -4,6 +4,7 @@ package io.github.ejif.geometry.algorithm;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
@@ -216,7 +217,7 @@ public final class Voronoi {
          * circumcenter, and the ray points in the opposite direction as the third point with that
          * circumcenter.
          */
-        List<Border> borders = new ArrayList<>();
+        Set<Border> borders = new HashSet<>();
         vertices.forEach((pointIndices, circumcenter) -> {
             int sumPointIndices = 0;
             for (int i : pointIndices)
