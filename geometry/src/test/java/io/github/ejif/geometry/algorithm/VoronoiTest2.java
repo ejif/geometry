@@ -54,14 +54,8 @@ public final class VoronoiTest2 {
             PointPair pointPair = border.getPointPair();
             Point p1 = points.get(pointPair.getPointIndex1());
             Point p2 = points.get(pointPair.getPointIndex2());
-            double x1 = p1.x;
-            double y1 = p1.y;
-            double x2 = p2.x;
-            double y2 = p2.y;
-            double startT = Math.max(border.getStartT(), -MAX_COORDINATE);
-            double endT = Math.min(border.getEndT(), MAX_COORDINATE);
-            Point start = new Point((x1 + x2) / 2 - (y2 - y1) * startT, (y1 + y2) / 2 + (x2 - x1) * startT);
-            Point end = new Point((x1 + x2) / 2 - (y2 - y1) * endT, (y1 + y2) / 2 + (x2 - x1) * endT);
+            Point start = border.getStartPoint() == null ? Border.computePoint(p1, p2, -MAX_COORDINATE) : border.getStartPoint();
+            Point end = border.getEndPoint() == null ? Border.computePoint(p1, p2, MAX_COORDINATE) : border.getEndPoint();
             // Move the start point slightly towards p1 to break ties, then verify it is closest to
             // p1. Repeat for the other combinations.
             assertThatPoint(start).movedSlightlyTowards(p1).isClosestTo(p1);

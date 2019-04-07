@@ -160,22 +160,8 @@ public final class VoronoiTest1 {
             PointPair pointPair = border.getPointPair();
             Point p1 = testCase.points.get(pointPair.getPointIndex1());
             Point p2 = testCase.points.get(pointPair.getPointIndex2());
-            double x1 = p1.x;
-            double y1 = p1.y;
-            double x2 = p2.x;
-            double y2 = p2.y;
-            if (border.getStartT() == Double.NEGATIVE_INFINITY) {
-                assertThat(border.getStartPoint()).isNull();
-            } else {
-                assertThatPoint(border.getStartPoint())
-                    .isCloseTo(new Point((x1 + x2) / 2 - (y2 - y1) * border.getStartT(), (y1 + y2) / 2 + (x2 - x1) * border.getStartT()));
-            }
-            if (border.getEndT() == Double.POSITIVE_INFINITY) {
-                assertThat(border.getEndPoint()).isNull();
-            } else {
-                assertThatPoint(border.getEndPoint())
-                    .isCloseTo(new Point((x1 + x2) / 2 - (y2 - y1) * border.getEndT(), (y1 + y2) / 2 + (x2 - x1) * border.getEndT()));
-            }
+            assertThatPoint(border.getStartPoint()).isCloseTo(Border.computePoint(p1, p2, border.getStartT()));
+            assertThatPoint(border.getEndPoint()).isCloseTo(Border.computePoint(p1, p2, border.getEndT()));
         }
     }
 
