@@ -37,7 +37,6 @@ public final class Voronoi {
     public static final double MAX_WIGGLE_DISTANCE = 1e-6;
 
     private static final Logger log = LoggerFactory.getLogger(Voronoi.class);
-    private static final Random random = new Random(2915);
 
     /**
      * Computes the Voronoi diagram of the given points using Fortune's algorithm. See
@@ -47,22 +46,37 @@ public final class Voronoi {
      *            the points to compute Fortune's algorithm for
      * @return the Voronoi diagram
      */
-    public static VoronoiDiagram createVoronoiDiagram(List<Point> originalPoints) {
+    public static VoronoiDiagram createVoronoiDiagram(List<Point> points) {
+        return createVoronoiDiagram(points, new Random(2915));
+    }
+
+    /**
+     * Computes the Voronoi diagram of the given points using Fortune's algorithm. See
+     * http://www.cs.sfu.ca/~binay/813.2011/Fortune.pdf.
+     *
+     * @param points
+     *            the points to compute Fortune's algorithm for
+     * @param random
+     *            the random number generator, used for wiggling points slightly to avoid degenerate
+     *            configurations
+     * @return the Voronoi diagram
+     */
+    public static VoronoiDiagram createVoronoiDiagram(List<Point> points, Random random) {
         // Wiggle each point to ensure that no two points have the same x or y coordinate, no three
         // points are collinear, and no four points with the same circumcenter.
-        List<Point> points = originalPoints.stream()
+        List<Point> wiggledPoints = points.stream()
             .map(point -> new Point(
                 point.x + random.nextDouble() * MAX_WIGGLE_DISTANCE,
                 point.y + random.nextDouble() * MAX_WIGGLE_DISTANCE))
             .collect(Collectors.toList());
-        log.debug("Wiggled points: {}", points);
+        log.debug("Wiggled points: {}", wiggledPoints);
         log.debug("");
 
         // Maintain a priority queue of events as we move the sweep line from left to right.
         PriorityQueue<Event> events = new PriorityQueue<>(Comparator.comparing(Event::getX));
         for (int pointIndex = 0; pointIndex < points.size(); pointIndex++) {
             events.add(PointEvent.builder()
-                .x(points.get(pointIndex).x)
+                .x(wiggledPoints.get(pointIndex).x)
                 .pointIndex(pointIndex)
                 .build());
         }
@@ -72,9 +86,9 @@ public final class Voronoi {
          * at the rightmost point of the circumcircle of their foci.
          */
         Consumer<Arc> processArc = arc -> {
-            Point point = points.get(arc.pointIndex);
-            Point prevPoint = points.get(arc.prev.pointIndex);
-            Point nextPoint = points.get(arc.next.pointIndex);
+            Point point = wiggledPoints.get(arc.pointIndex);
+            Point prevPoint = wiggledPoints.get(arc.prev.pointIndex);
+            Point nextPoint = wiggledPoints.get(arc.next.pointIndex);
 
             // The cross product must be positive, otherwise this arc will never collapse into a point.
             if (Points.crossProduct(point, prevPoint, point, nextPoint) <= 0)
@@ -99,15 +113,19 @@ public final class Voronoi {
         AtomicDouble sweepX = new AtomicDouble();
         Function<Arc, Interval> getInterval = arc -> {
             double xs = sweepX.get();
-            Point currPoint = points.get(arc.pointIndex);
+            Point currPoint = wiggledPoints.get(arc.pointIndex);
 
             // If the focus of the parabola is on the sweep line, the parabola is a degenerate
             // horizontal ray passing through the focus.
             if (currPoint.x == xs)
                 return new Interval(currPoint.y, currPoint.y);
 
-            double min = arc.prev == null ? Double.NEGATIVE_INFINITY : findIntersection(xs, currPoint, points.get(arc.prev.pointIndex));
-            double max = arc.next == null ? Double.POSITIVE_INFINITY : findIntersection(xs, points.get(arc.next.pointIndex), currPoint);
+            double min = arc.prev == null
+                    ? Double.NEGATIVE_INFINITY
+                    : findIntersection(xs, currPoint, wiggledPoints.get(arc.prev.pointIndex));
+            double max = arc.next == null
+                    ? Double.POSITIVE_INFINITY
+                    : findIntersection(xs, wiggledPoints.get(arc.next.pointIndex), currPoint);
             return new Interval(min, max);
         };
         TreeSet<Arc> arcs = new TreeSet<>(Comparator.comparing(getInterval));
@@ -215,9 +233,9 @@ public final class Voronoi {
             for (int i1 : pointIndices)
                 for (int i2 : pointIndices)
                     if (i1 < i2) {
-                        Point p1 = points.get(i1);
-                        Point p2 = points.get(i2);
-                        Point p3 = points.get(sumPointIndices - i1 - i2);
+                        Point p1 = wiggledPoints.get(i1);
+                        Point p2 = wiggledPoints.get(i2);
+                        Point p3 = wiggledPoints.get(sumPointIndices - i1 - i2);
                         PointPair pointPair = PointPair.of(i1, i2);
                         double x1 = p1.x;
                         double y1 = p1.y;

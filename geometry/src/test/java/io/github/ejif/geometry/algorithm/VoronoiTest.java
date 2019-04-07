@@ -79,7 +79,6 @@ public final class VoronoiTest {
                     .add(new Border(PointPair.of(1, 2), Double.NEGATIVE_INFINITY, 0.5))
                     .build())))
 
-
             /**
              * <pre>
              *    |   |
@@ -153,10 +152,10 @@ public final class VoronoiTest {
     }
 
     @Test
-    public void testGeneratedDiagramSimilarToExpected() {
+    public void testGeneratedDiagram_isSimilarToExpected() {
         VoronoiDiagram diagram = Voronoi.createVoronoiDiagram(testCase.points);
         Map<PointPair, Border> expectedBorders = Maps.uniqueIndex(testCase.expectedDiagram.getBorders(), Border::getPointPair);
-        int count = 0;
+        int numExpectedBordersFound = 0;
         for (Border border : diagram.getBorders()) {
             if (border.getEndT() - border.getStartT() < MAX_TOLERANCE) {
                 // Because of wiggled points, the actual diagram may have very small edges that don't exist in the
@@ -167,21 +166,17 @@ public final class VoronoiTest {
                 // Ignore point close to infinity caused by intersection of two lines that should be parallel.
                 continue;
             }
+            assertThat(expectedBorders.containsKey(border.getPointPair()));
             Border expectedBorder = expectedBorders.get(border.getPointPair());
-            assertThat(expectedBorder).isNotNull();
-            if (expectedBorder.getStartT() == Double.NEGATIVE_INFINITY) {
-                assertThat(border.getStartT()).isLessThan(-MAX_BOUNDS);
-            } else {
-                assertThat(border.getStartT()).isCloseTo(expectedBorder.getStartT(), within(MAX_TOLERANCE));
-            }
-            if (expectedBorder.getEndT() == Double.POSITIVE_INFINITY) {
-                assertThat(border.getEndT()).isGreaterThan(MAX_BOUNDS);
-            } else {
-                assertThat(border.getEndT()).isCloseTo(expectedBorder.getEndT(), within(MAX_TOLERANCE));
-            }
-            count++;
+            assertThatValues(border.getStartT(), expectedBorder.getStartT()).areClose();
+            assertThatValues(border.getEndT(), expectedBorder.getEndT()).areClose();
+            numExpectedBordersFound++;
         }
-        assertThat(count).isEqualTo(expectedBorders.size());
+        assertThat(numExpectedBordersFound).isEqualTo(expectedBorders.size());
+    }
+
+    private DoublePairAssert assertThatValues(double actual, double expected) {
+        return new DoublePairAssert(actual, expected);
     }
 
     @Data
@@ -189,5 +184,20 @@ public final class VoronoiTest {
 
         final List<Point> points;
         final VoronoiDiagram expectedDiagram;
+    }
+
+    @Data
+    private static final class DoublePairAssert {
+
+        final double actual;
+        final double expected;
+
+        void areClose() {
+            if (Math.abs(expected) > MAX_BOUNDS) {
+                assertThat(Math.abs(actual)).isGreaterThan(MAX_BOUNDS);
+            } else {
+                assertThat(actual).isCloseTo(expected, within(MAX_TOLERANCE));
+            }
+        }
     }
 }
