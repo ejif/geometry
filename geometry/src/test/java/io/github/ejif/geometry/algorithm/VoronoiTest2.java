@@ -17,9 +17,14 @@ import io.github.ejif.geometry.VoronoiDiagram.Border;
 import io.github.ejif.geometry.VoronoiDiagram.PointPair;
 import lombok.Data;
 
+/**
+ * Tests several randomly generated point configurations, and verifies that the Voronoi diagram
+ * satisfies expected properties (points on each side of every border in the Voronoi diagram are
+ * closest to the point for that corresponding region).
+ */
 @Data
 @RunWith(Parameterized.class)
-public final class VoronoiTestLarge {
+public final class VoronoiTest2 {
 
     public static final int NUM_TEST_CASES = 10;
     public static final int MIN_NUM_POINTS = 5;
@@ -33,8 +38,9 @@ public final class VoronoiTestLarge {
         Random random = new Random(2915);
         List<List<Point>> parameters = new ArrayList<>();
         for (int i = 0; i < NUM_TEST_CASES; i++) {
+            int testCaseSize = MIN_NUM_POINTS + i;
             List<Point> points = new ArrayList<>();
-            for (int j = 0; j < MIN_NUM_POINTS + i; j++)
+            for (int j = 0; j < testCaseSize; j++)
                 points.add(new Point(random.nextDouble() * MAX_COORDINATE, random.nextDouble() * MAX_COORDINATE));
             parameters.add(points);
         }

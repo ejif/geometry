@@ -21,9 +21,13 @@ import io.github.ejif.geometry.VoronoiDiagram.Border;
 import io.github.ejif.geometry.VoronoiDiagram.PointPair;
 import lombok.Data;
 
+/**
+ * Tests several hard-coded point configurations, and verifies that the returned Voronoi diagram is
+ * similar to the expected hard-coded diagram.
+ */
 @Data
 @RunWith(Parameterized.class)
-public final class VoronoiTest {
+public final class VoronoiTest1 {
 
     public static final double MAX_TOLERANCE = 4 * Voronoi.MAX_WIGGLE_DISTANCE;
     public static final double MAX_BOUNDS = 1 / MAX_TOLERANCE;

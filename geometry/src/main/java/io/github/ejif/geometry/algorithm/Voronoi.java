@@ -133,6 +133,8 @@ public final class Voronoi {
         // A function to log the current arcs in the beach line and verify that invariants are
         // satisfied; used for debugging only.
         Runnable logArcs = () -> {
+            if (!log.isDebugEnabled())
+                return;
             List<String> arcStrings = new ArrayList<>();
             if (!arcs.isEmpty())
                 for (Arc arc = arcs.first(); arc != null; arc = arc.next)
