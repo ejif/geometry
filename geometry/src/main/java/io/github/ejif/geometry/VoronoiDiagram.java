@@ -5,7 +5,6 @@ import java.util.Set;
 
 import com.google.common.base.Preconditions;
 
-import io.github.ejif.geometry.algorithm.Points;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -16,17 +15,23 @@ public final class VoronoiDiagram {
     private final Set<Border> borders;
 
     /**
-     * A border between two points in the Voronoi diagram. The order of start and end is such that
-     * {@link Points#crossProduct} applied on (point1, point2, start, end) is strictly positive. One
-     * or both of the start and end points may be null, which represents that the corresponding
-     * point is/points are at infinity.
+     * A border between two points in the Voronoi diagram. The parameterization of the perpendicular
+     * bisector of the two points (x1, y1) and (x2, y2) is given by
+     *
+     * <pre>
+     * x = (x1 + x2) / 2 - (y2 - y1) t
+     * y = (y1 + y2) / 2 + (x2 - x1) t
+     * </pre>
+     *
+     * The startT and endT values represent the start and end points of this bisecting line, where
+     * startT < endT, startT may be -Infinity, and endT may be Infinity.
      */
     @Data
     public static final class Border {
 
         private final PointPair pointPair;
-        private final Point start;
-        private final Point end;
+        private final double startT;
+        private final double endT;
     }
 
     @Data

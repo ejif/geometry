@@ -2,6 +2,7 @@
 package io.github.ejif.geometry.algorithm;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -202,22 +203,11 @@ public final class Voronoi {
             log.debug("Vertex at {} (circumcenter of {})", circumcenter, pointIndices);
         });
 
-        Multimap<PointPair, Point> verticesMap = ArrayListMultimap.create();
-        vertices.forEach((pointIndices, circumcenter) -> {
-            for (int i1 : pointIndices)
-                for (int i2 : pointIndices)
-                    if (i1 < i2)
-                        verticesMap.put(PointPair.of(i1, i2), circumcenter);
-        });
-
         /**
-         * Convert the vertices into the {@link VoronoiDiagram} format. If a pair of two points is
-         * part of two circumcenters, then the Voronoi diagram contains the line segment through the
-         * two circumcenters. Otherwise, the Voronoi diagram is a ray starting at the single
-         * circumcenter, and the ray points in the opposite direction as the third point with that
-         * circumcenter.
+         * For each vertex/circumcenter, take the three pairs of points and store the three rays
+         * emanating away from the vertex.
          */
-        Set<Border> borders = new HashSet<>();
+        Multimap<PointPair, Interval> rays = ArrayListMultimap.create();
         vertices.forEach((pointIndices, circumcenter) -> {
             int sumPointIndices = 0;
             for (int i : pointIndices)
@@ -227,32 +217,52 @@ public final class Voronoi {
                     if (i1 < i2) {
                         Point p1 = points.get(i1);
                         Point p2 = points.get(i2);
+                        Point p3 = points.get(sumPointIndices - i1 - i2);
                         PointPair pointPair = PointPair.of(i1, i2);
-                        List<Point> borderVertices = new ArrayList<>(verticesMap.get(pointPair));
-                        assert borderVertices.size() >= 1 && borderVertices.size() <= 2;
-                        assert borderVertices.contains(circumcenter);
-                        if (borderVertices.size() == 2) {
-                            Point borderVertex1 = borderVertices.get(0);
-                            Point borderVertex2 = borderVertices.get(1);
-                            if (Points.crossProduct(p1, p2, borderVertex1, borderVertex2) > 0) {
-                                borders.add(new Border(pointPair, borderVertex1, borderVertex2));
-                            } else {
-                                borders.add(new Border(pointPair, borderVertex2, borderVertex1));
-                            }
+                        double x1 = p1.x;
+                        double y1 = p1.y;
+                        double x2 = p2.x;
+                        double y2 = p2.y;
+                        double xc = circumcenter.x;
+                        double yc = circumcenter.y;
+                        // The value of t that corresponds to the point on the perpendicular
+                        // bisector of p1 and p2 that is closest to the circumcenter. Equivalent
+                        // to minimizing (taking the vertex of the parabola):
+                        // hypot((x1 + x2) / 2 - (y2 - y1)t - xc, (y1 + y2) / 2 + (x2 - x1)t - yc).
+                        double t = ((y2 - y1) * (x1 + x2 - 2 * xc) - (x2 - x1) * (y1 + y2 - 2 * yc))
+                                / (2 * ((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)));
+                        if (Points.crossProduct(p1, p2, p1, p3) > 0) {
+                            rays.put(pointPair, new Interval(Double.NEGATIVE_INFINITY, t));
                         } else {
-                            int otherPointIndex = sumPointIndices - (i1 + i2);
-                            if (Points.crossProduct(p1, p2, p1, points.get(otherPointIndex)) > 0) {
-                                borders.add(new Border(pointPair, null, circumcenter));
-                            } else {
-                                borders.add(new Border(pointPair, circumcenter, null));
-                            }
+                            rays.put(pointPair, new Interval(t, Double.POSITIVE_INFINITY));
                         }
                     }
         });
 
+        /**
+         * For each pair of adjacent points in the Voronoi diagram, if only one ray was stored in
+         * the previous step, then store that ray in the Voronoi diagram; otherwise, if two rays
+         * were stored, then store the line segment equal to the intersection of the two rays.
+         */
+        Set<Border> borders = new HashSet<>();
+        for (PointPair pointPair : rays.keySet()) {
+            double startT = Double.NEGATIVE_INFINITY;
+            double endT = Double.POSITIVE_INFINITY;
+            Collection<Interval> intervals = rays.get(pointPair);
+            assert intervals.size() >= 1 && intervals.size() <= 2;
+            for (Interval interval : intervals) {
+                if (interval.min > startT)
+                    startT = interval.min;
+                if (interval.max < endT)
+                    endT = interval.max;
+            }
+            assert startT < endT;
+            borders.add(new Border(pointPair, startT, endT));
+        }
+
         // Special case: if there are 2 points, there is a single line and no vertices.
         if (points.size() == 2)
-            borders.add(new Border(PointPair.of(0, 1), null, null));
+            borders.add(new Border(PointPair.of(0, 1), Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY));
 
         return new VoronoiDiagram(borders);
     }
