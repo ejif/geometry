@@ -2,7 +2,6 @@
 package io.github.ejif.geometry.algorithm;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.within;
 
 import java.util.List;
 import java.util.Map;
@@ -12,7 +11,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 
 import io.github.ejif.geometry.Point;
@@ -41,24 +39,24 @@ public final class VoronoiTest1 {
             .add(new TestCase(
                 ImmutableList.<Point> builder()
                     .build(),
-                new VoronoiDiagram(ImmutableSet.<Border> builder()
-                    .build())))
+                ImmutableList.<ExpectedBorder> builder()
+                    .build()))
 
             .add(new TestCase(
                 ImmutableList.<Point> builder()
                     .add(new Point(0, 0))
                     .build(),
-                new VoronoiDiagram(ImmutableSet.<Border> builder()
-                    .build())))
+                ImmutableList.<ExpectedBorder> builder()
+                    .build()))
 
             .add(new TestCase(
                 ImmutableList.<Point> builder()
                     .add(new Point(0, 0))
                     .add(new Point(100, 0))
                     .build(),
-                new VoronoiDiagram(ImmutableSet.<Border> builder()
-                    .add(new Border(PointPair.of(0, 1), Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY))
-                    .build())))
+                ImmutableList.<ExpectedBorder> builder()
+                    .add(new ExpectedBorder(PointPair.of(0, 1), null, null))
+                    .build()))
 
             /**
              * <pre>
@@ -77,11 +75,11 @@ public final class VoronoiTest1 {
                     .add(new Point(100, 0))
                     .add(new Point(100, 100))
                     .build(),
-                new VoronoiDiagram(ImmutableSet.<Border> builder()
-                    .add(new Border(PointPair.of(0, 1), Double.NEGATIVE_INFINITY, 0.5))
-                    .add(new Border(PointPair.of(0, 2), 0, Double.POSITIVE_INFINITY))
-                    .add(new Border(PointPair.of(1, 2), Double.NEGATIVE_INFINITY, 0.5))
-                    .build())))
+                ImmutableList.<ExpectedBorder> builder()
+                    .add(new ExpectedBorder(PointPair.of(0, 1), null, new Point(50, 50)))
+                    .add(new ExpectedBorder(PointPair.of(0, 2), new Point(50, 50), null))
+                    .add(new ExpectedBorder(PointPair.of(1, 2), null, new Point(50, 50)))
+                    .build()))
 
             /**
              * <pre>
@@ -96,10 +94,10 @@ public final class VoronoiTest1 {
                     .add(new Point(100, 0))
                     .add(new Point(200, 0))
                     .build(),
-                new VoronoiDiagram(ImmutableSet.<Border> builder()
-                    .add(new Border(PointPair.of(0, 1), Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY))
-                    .add(new Border(PointPair.of(1, 2), Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY))
-                    .build())))
+                ImmutableList.<ExpectedBorder> builder()
+                    .add(new ExpectedBorder(PointPair.of(0, 1), null, null))
+                    .add(new ExpectedBorder(PointPair.of(1, 2), null, null))
+                    .build()))
 
             /**
              * <pre>
@@ -119,12 +117,12 @@ public final class VoronoiTest1 {
                     .add(new Point(100, 100))
                     .add(new Point(0, 100))
                     .build(),
-                new VoronoiDiagram(ImmutableSet.<Border> builder()
-                    .add(new Border(PointPair.of(0, 1), Double.NEGATIVE_INFINITY, 0.5))
-                    .add(new Border(PointPair.of(0, 3), -0.5, Double.POSITIVE_INFINITY))
-                    .add(new Border(PointPair.of(1, 2), Double.NEGATIVE_INFINITY, 0.5))
-                    .add(new Border(PointPair.of(2, 3), Double.NEGATIVE_INFINITY, 0.5))
-                    .build())))
+                ImmutableList.<ExpectedBorder> builder()
+                    .add(new ExpectedBorder(PointPair.of(0, 1), null, new Point(50, 50)))
+                    .add(new ExpectedBorder(PointPair.of(0, 3), new Point(50, 50), null))
+                    .add(new ExpectedBorder(PointPair.of(1, 2), null, new Point(50, 50)))
+                    .add(new ExpectedBorder(PointPair.of(2, 3), null, new Point(50, 50)))
+                    .build()))
 
             /**
              * <pre>
@@ -144,21 +142,47 @@ public final class VoronoiTest1 {
                     .add(new Point(100, 100))
                     .add(new Point(200, 100))
                     .build(),
-                new VoronoiDiagram(ImmutableSet.<Border> builder()
-                    .add(new Border(PointPair.of(0, 1), Double.NEGATIVE_INFINITY, 0.5))
-                    .add(new Border(PointPair.of(0, 2), 0, Double.POSITIVE_INFINITY))
-                    .add(new Border(PointPair.of(1, 2), -0.5, 0.5))
-                    .add(new Border(PointPair.of(1, 3), Double.NEGATIVE_INFINITY, 0))
-                    .add(new Border(PointPair.of(2, 3), -0.5, Double.POSITIVE_INFINITY))
-                    .build())))
+                ImmutableList.<ExpectedBorder> builder()
+                    .add(new ExpectedBorder(PointPair.of(0, 1), null, new Point(50, 50)))
+                    .add(new ExpectedBorder(PointPair.of(0, 2), new Point(50, 50), null))
+                    .add(new ExpectedBorder(PointPair.of(1, 2), new Point(50, 50), new Point(150, 50)))
+                    .add(new ExpectedBorder(PointPair.of(1, 3), null, new Point(150, 50)))
+                    .add(new ExpectedBorder(PointPair.of(2, 3), new Point(50, 50), null))
+                    .build()))
 
             .build();
     }
 
     @Test
-    public void testGeneratedDiagram_isSimilarToExpected() {
+    public void testGeneratedDiagram_hasBordersWithConsistentParameterizationAndPoint() {
         VoronoiDiagram diagram = Voronoi.createVoronoiDiagram(testCase.points);
-        Map<PointPair, Border> expectedBorders = Maps.uniqueIndex(testCase.expectedDiagram.getBorders(), Border::getPointPair);
+        for (Border border : diagram.getBorders()) {
+            PointPair pointPair = border.getPointPair();
+            Point p1 = testCase.points.get(pointPair.getPointIndex1());
+            Point p2 = testCase.points.get(pointPair.getPointIndex2());
+            double x1 = p1.x;
+            double y1 = p1.y;
+            double x2 = p2.x;
+            double y2 = p2.y;
+            if (border.getStartT() == Double.NEGATIVE_INFINITY) {
+                assertThat(border.getStartPoint()).isNull();
+            } else {
+                assertThatPoint(border.getStartPoint())
+                    .isCloseTo(new Point((x1 + x2) / 2 - (y2 - y1) * border.getStartT(), (y1 + y2) / 2 + (x2 - x1) * border.getStartT()));
+            }
+            if (border.getEndT() == Double.POSITIVE_INFINITY) {
+                assertThat(border.getEndPoint()).isNull();
+            } else {
+                assertThatPoint(border.getEndPoint())
+                    .isCloseTo(new Point((x1 + x2) / 2 - (y2 - y1) * border.getEndT(), (y1 + y2) / 2 + (x2 - x1) * border.getEndT()));
+            }
+        }
+    }
+
+    @Test
+    public void testGeneratedDiagram_hasExpectedBorderVertices() {
+        VoronoiDiagram diagram = Voronoi.createVoronoiDiagram(testCase.points);
+        Map<PointPair, ExpectedBorder> expectedBorders = Maps.uniqueIndex(testCase.borders, ExpectedBorder::getPointPair);
         int numExpectedBordersFound = 0;
         for (Border border : diagram.getBorders()) {
             if (border.getEndT() - border.getStartT() < MAX_TOLERANCE) {
@@ -170,37 +194,44 @@ public final class VoronoiTest1 {
                 // Ignore point close to infinity caused by intersection of two lines that should be parallel.
                 continue;
             }
-            assertThat(expectedBorders.containsKey(border.getPointPair()));
-            Border expectedBorder = expectedBorders.get(border.getPointPair());
-            assertThatValues(border.getStartT(), expectedBorder.getStartT()).areClose();
-            assertThatValues(border.getEndT(), expectedBorder.getEndT()).areClose();
+            assertThat(expectedBorders).containsKey(border.getPointPair());
+            ExpectedBorder expectedBorder = expectedBorders.get(border.getPointPair());
+            assertThatPoint(border.getStartPoint()).isCloseTo(expectedBorder.getStartPoint());
+            assertThatPoint(border.getEndPoint()).isCloseTo(expectedBorder.getEndPoint());
             numExpectedBordersFound++;
         }
         assertThat(numExpectedBordersFound).isEqualTo(expectedBorders.size());
     }
 
-    private DoublePairAssert assertThatValues(double actual, double expected) {
-        return new DoublePairAssert(actual, expected);
+    private PointAssert assertThatPoint(Point actual) {
+        return new PointAssert(actual);
     }
 
     @Data
     private static final class TestCase {
 
         final List<Point> points;
-        final VoronoiDiagram expectedDiagram;
+        final List<ExpectedBorder> borders;
     }
 
     @Data
-    private static final class DoublePairAssert {
+    private static final class ExpectedBorder {
 
-        final double actual;
-        final double expected;
+        final PointPair pointPair;
+        final Point startPoint;
+        final Point endPoint;
+    }
 
-        void areClose() {
-            if (Math.abs(expected) > MAX_BOUNDS) {
-                assertThat(Math.abs(actual)).isGreaterThan(MAX_BOUNDS);
+    @Data
+    private static final class PointAssert {
+
+        final Point actual;
+
+        void isCloseTo(Point expected) {
+            if (expected == null) {
+                assertThat(actual == null || Math.hypot(actual.x, actual.y) > MAX_BOUNDS).isTrue();
             } else {
-                assertThat(actual).isCloseTo(expected, within(MAX_TOLERANCE));
+                assertThat(Points.distance(actual, expected) < MAX_TOLERANCE);
             }
         }
     }

@@ -2,7 +2,6 @@
 package io.github.ejif.geometry.algorithm;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -227,7 +226,7 @@ public final class Voronoi {
          * For each vertex/circumcenter, take the three pairs of points and store the three rays
          * emanating away from the vertex.
          */
-        Multimap<PointPair, Interval> rays = ArrayListMultimap.create();
+        Multimap<PointPair, Ray> allRays = ArrayListMultimap.create();
         vertices.forEach((pointIndices, circumcenter) -> {
             int sumPointIndices = 0;
             for (int i : pointIndices)
@@ -245,17 +244,18 @@ public final class Voronoi {
                         double y2 = p2.y;
                         double xc = circumcenter.x;
                         double yc = circumcenter.y;
+
                         // The value of t that corresponds to the point on the perpendicular
                         // bisector of p1 and p2 that is closest to the circumcenter. Equivalent
                         // to minimizing (taking the vertex of the parabola):
                         // hypot((x1 + x2) / 2 - (y2 - y1)t - xc, (y1 + y2) / 2 + (x2 - x1)t - yc).
                         double t = ((y2 - y1) * (x1 + x2 - 2 * xc) - (x2 - x1) * (y1 + y2 - 2 * yc))
                                 / (2 * ((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)));
-                        if (Points.crossProduct(p1, p2, p1, p3) > 0) {
-                            rays.put(pointPair, new Interval(Double.NEGATIVE_INFINITY, t));
-                        } else {
-                            rays.put(pointPair, new Interval(t, Double.POSITIVE_INFINITY));
-                        }
+
+                        // The ray points in the opposite direction as p3 from the line (p1, p2).
+                        boolean isLessThanT = Points.crossProduct(p1, p2, p1, p3) > 0;
+
+                        allRays.put(pointPair, new Ray(circumcenter, t, isLessThanT));
                     }
         });
 
@@ -265,24 +265,30 @@ public final class Voronoi {
          * were stored, then store the line segment equal to the intersection of the two rays.
          */
         Set<Border> borders = new HashSet<>();
-        for (PointPair pointPair : rays.keySet()) {
-            double startT = Double.NEGATIVE_INFINITY;
-            double endT = Double.POSITIVE_INFINITY;
-            Collection<Interval> intervals = rays.get(pointPair);
-            assert intervals.size() >= 1 && intervals.size() <= 2;
-            for (Interval interval : intervals) {
-                if (interval.min > startT)
-                    startT = interval.min;
-                if (interval.max < endT)
-                    endT = interval.max;
+        for (PointPair pointPair : allRays.keySet()) {
+            List<Ray> rays = new ArrayList<>(allRays.get(pointPair));
+            assert rays.size() >= 1 && rays.size() <= 2;
+            if (rays.size() == 1) {
+                Ray ray = rays.get(0);
+                if (ray.isLessThanT) {
+                    borders.add(Border.of(pointPair, Double.NEGATIVE_INFINITY, null, ray.t, ray.point));
+                } else {
+                    borders.add(Border.of(pointPair, ray.t, ray.point, Double.POSITIVE_INFINITY, null));
+                }
+            } else {
+                Ray ray1 = rays.get(0);
+                Ray ray2 = rays.get(1);
+                if (ray1.t < ray2.t) {
+                    borders.add(Border.of(pointPair, ray1.t, ray1.point, ray2.t, ray2.point));
+                } else {
+                    borders.add(Border.of(pointPair, ray2.t, ray2.point, ray1.t, ray1.point));
+                }
             }
-            assert startT < endT;
-            borders.add(new Border(pointPair, startT, endT));
         }
 
         // Special case: if there are 2 points, there is a single line and no vertices.
         if (points.size() == 2)
-            borders.add(new Border(PointPair.of(0, 1), Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY));
+            borders.add(Border.of(PointPair.of(0, 1), Double.NEGATIVE_INFINITY, null, Double.POSITIVE_INFINITY, null));
 
         return new VoronoiDiagram(borders);
     }
@@ -369,6 +375,14 @@ public final class Voronoi {
         public String toString() {
             return String.format("[%.9f, %.9f]", min, max);
         }
+    }
+
+    @Data
+    private static class Ray {
+
+        final Point point;
+        final double t;
+        final boolean isLessThanT;
     }
 
     private Voronoi() {
