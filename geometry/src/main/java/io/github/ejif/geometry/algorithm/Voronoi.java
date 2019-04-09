@@ -267,7 +267,6 @@ public final class Voronoi {
         Set<Border> borders = new HashSet<>();
         for (PointPair pointPair : allRays.keySet()) {
             List<Ray> rays = new ArrayList<>(allRays.get(pointPair));
-            assert rays.size() >= 1 && rays.size() <= 2;
             if (rays.size() == 1) {
                 Ray ray = rays.get(0);
                 if (ray.isLessThanT) {
@@ -275,7 +274,7 @@ public final class Voronoi {
                 } else {
                     borders.add(Border.of(pointPair, ray.t, ray.point, Double.POSITIVE_INFINITY, null));
                 }
-            } else {
+            } else if (rays.size() == 2) {
                 Ray ray1 = rays.get(0);
                 Ray ray2 = rays.get(1);
                 if (ray1.t < ray2.t) {
@@ -283,6 +282,8 @@ public final class Voronoi {
                 } else {
                     borders.add(Border.of(pointPair, ray2.t, ray2.point, ray1.t, ray1.point));
                 }
+            } else {
+                assert false;
             }
         }
 
@@ -323,7 +324,7 @@ public final class Voronoi {
         return (iy1 - y1) / (x1 - xs) > (iy1 - y2) / (x2 - xs) ? iy1 : iy2;
     }
 
-    private static interface Event {
+    private interface Event {
 
         double getX();
     }
