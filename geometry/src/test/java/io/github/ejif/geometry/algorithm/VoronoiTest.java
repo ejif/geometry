@@ -18,10 +18,7 @@ import io.github.ejif.geometry.Point;
 import io.github.ejif.geometry.SubLine;
 import io.github.ejif.geometry.VoronoiDiagram.Border;
 
-/**
- * Miscellaneous tests for Voronoi diagrams.
- */
-public final class VoronoiTest3 {
+public final class VoronoiTest {
 
     public static final int NUM_POINTS = 10000;
     public static final double MAX_COORDINATE = 1000;

@@ -24,4 +24,21 @@ public final class SubLine {
     private final Point startPoint;
     @Nullable
     private final Point endPoint;
+
+    /**
+     * Returns a subset of this line that is guaranteed to be finite (a line segment).
+     *
+     * @param maxNumSteps
+     *            the maximum number of dx, dy steps to move away from anyPoint
+     * @return the subset line segment
+     */
+    public SubLine toFiniteSegment(double maxNumSteps) {
+        Point newStartPoint = startPoint == null
+                ? new Point(anyPoint.x - maxNumSteps * dx, anyPoint.y - maxNumSteps * dy)
+                : startPoint;
+        Point newEndPoint = endPoint == null
+                ? new Point(anyPoint.x + maxNumSteps * dx, anyPoint.y + maxNumSteps * dy)
+                : endPoint;
+        return new SubLine(anyPoint, dx, dy, newStartPoint, newEndPoint);
+    }
 }

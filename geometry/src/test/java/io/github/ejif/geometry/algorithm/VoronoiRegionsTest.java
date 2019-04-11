@@ -13,18 +13,15 @@ import org.junit.runners.Parameterized;
 
 import io.github.ejif.geometry.Point;
 import io.github.ejif.geometry.SubLine;
-import io.github.ejif.geometry.VoronoiDiagram;
-import io.github.ejif.geometry.VoronoiDiagram.Border;
 import lombok.Data;
 
 /**
- * Tests several randomly generated point configurations, and verifies that the Voronoi diagram
- * satisfies expected properties (points on each side of every border in the Voronoi diagram are
- * closest to the point for that corresponding region).
+ * Tests several randomly generated point configurations, and verifies that the regions are correct
+ * (all points inside the region are closest to the point for that corresponding region).
  */
 @Data
 @RunWith(Parameterized.class)
-public final class VoronoiTest2 {
+public final class VoronoiRegionsTest {
 
     public static final int NUM_TEST_CASES = 10;
     public static final int MIN_NUM_POINTS = 5;
@@ -48,30 +45,14 @@ public final class VoronoiTest2 {
     }
 
     @Test
-    public void testGeneratedDiagram_hasCorrectVertices() {
-        VoronoiDiagram diagram = Voronoi.createVoronoiDiagram(points);
-        for (Border border : diagram.getBorders()) {
-            Point pl = points.get(border.getLeftPointIndex());
-            Point pr = points.get(border.getRightPointIndex());
-
-            SubLine subLine = border.getSubLine();
-            Point startPoint = subLine.getStartPoint() == null
-                    ? new Point(
-                        subLine.getAnyPoint().x - subLine.getDx() * MAX_COORDINATE,
-                        subLine.getAnyPoint().y - subLine.getDy() * MAX_COORDINATE)
-                    : subLine.getStartPoint();
-            Point endPoint = subLine.getEndPoint() == null
-                    ? new Point(
-                        subLine.getAnyPoint().x + subLine.getDx() * MAX_COORDINATE,
-                        subLine.getAnyPoint().y + subLine.getDy() * MAX_COORDINATE)
-                    : subLine.getEndPoint();
-            // Move the start point slightly towards p1 to break ties, then verify it is closest to
-            // p1. Repeat for the other combinations.
-            assertThatPoint(startPoint).movedSlightlyTowards(pl).isClosestTo(pl);
-            assertThatPoint(endPoint).movedSlightlyTowards(pl).isClosestTo(pl);
-            assertThatPoint(startPoint).movedSlightlyTowards(pr).isClosestTo(pr);
-            assertThatPoint(endPoint).movedSlightlyTowards(pr).isClosestTo(pr);
-        }
+    public void testGeneratedDiagram_hasCorrectRegions() {
+        Voronoi.createVoronoiDiagram(points).toRegions().forEach((pointIndex, region) -> {
+            Point p = points.get(pointIndex);
+            // Verify that each vertex in this region, when moved slightly closer to the region's
+            // point to break ties, is closest to the region's point than to any other point.
+            for (SubLine edge : region.getEdges())
+                assertThatPoint(edge.toFiniteSegment(MAX_COORDINATE).getStartPoint()).movedSlightlyTowards(p).isClosestTo(p);
+        });
     }
 
     private PointAssert assertThatPoint(Point point) {

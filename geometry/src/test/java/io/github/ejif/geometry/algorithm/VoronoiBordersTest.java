@@ -17,11 +17,11 @@ import lombok.Data;
 
 /**
  * Tests several hard-coded point configurations, and verifies that the returned Voronoi diagram is
- * similar to the expected hard-coded diagram.
+ * identical to the expected hard-coded diagram.
  */
 @Data
 @RunWith(Parameterized.class)
-public final class VoronoiTest1 {
+public final class VoronoiBordersTest {
 
     private final TestCase testCase;
 

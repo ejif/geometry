@@ -1,7 +1,16 @@
 
 package io.github.ejif.geometry;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Multimap;
 
 import lombok.Data;
 
@@ -29,5 +38,34 @@ public final class VoronoiDiagram {
         private final int leftPointIndex;
         private final int rightPointIndex;
         private final SubLine subLine;
+    }
+
+    /**
+     * Returns a map from each point p (referenced by its index) to the region of points that are
+     * closest to p than to any other point.
+     *
+     * @return the regions
+     */
+    public Map<Integer, Region> toRegions() {
+        Multimap<Integer, SubLine> allEdges = ArrayListMultimap.create();
+        for (Border border : borders) {
+            SubLine subLine = border.subLine;
+            allEdges.put(border.leftPointIndex, subLine);
+            SubLine flippedSubLine = new SubLine(subLine.getAnyPoint(), -subLine.getDx(), -subLine.getDy(), subLine.getEndPoint(),
+                subLine.getStartPoint());
+            allEdges.put(border.rightPointIndex, flippedSubLine);
+        }
+        ImmutableMap.Builder<Integer, Region> regions = ImmutableMap.builder();
+        for (int pointIndex : allEdges.keySet()) {
+            List<SubLine> edges = new ArrayList<>(allEdges.get(pointIndex));
+            Map<Point, SubLine> edgesByStartPoint = new HashMap<>();
+            for (SubLine edge : edges.subList(1, edges.size()))
+                edgesByStartPoint.put(edge.getStartPoint(), edge);
+            ImmutableList.Builder<SubLine> orderedEdges = ImmutableList.builder();
+            for (SubLine edge = edges.get(0); edge != null; edge = edgesByStartPoint.remove(edge.getEndPoint()))
+                orderedEdges.add(edge);
+            regions.put(pointIndex, new Region(orderedEdges.build()));
+        }
+        return regions.build();
     }
 }
