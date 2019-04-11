@@ -12,9 +12,9 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import io.github.ejif.geometry.Point;
+import io.github.ejif.geometry.SubLine;
 import io.github.ejif.geometry.VoronoiDiagram;
 import io.github.ejif.geometry.VoronoiDiagram.Border;
-import io.github.ejif.geometry.VoronoiDiagram.PointPair;
 import lombok.Data;
 
 /**
@@ -29,7 +29,7 @@ public final class VoronoiTest2 {
     public static final int NUM_TEST_CASES = 10;
     public static final int MIN_NUM_POINTS = 5;
     public static final double MAX_COORDINATE = 1000;
-    public static final double WIGGLE_RATIO = 1e-3;
+    public static final double SLIGHT_RATIO = 1e-3;
 
     private final List<Point> points;
 
@@ -51,17 +51,26 @@ public final class VoronoiTest2 {
     public void testGeneratedDiagram_hasCorrectVertices() {
         VoronoiDiagram diagram = Voronoi.createVoronoiDiagram(points);
         for (Border border : diagram.getBorders()) {
-            PointPair pointPair = border.getPointPair();
-            Point p1 = points.get(pointPair.getPointIndex1());
-            Point p2 = points.get(pointPair.getPointIndex2());
-            Point start = border.getStartPoint() == null ? Border.computePoint(p1, p2, -MAX_COORDINATE) : border.getStartPoint();
-            Point end = border.getEndPoint() == null ? Border.computePoint(p1, p2, MAX_COORDINATE) : border.getEndPoint();
+            Point pl = points.get(border.getLeftPointIndex());
+            Point pr = points.get(border.getRightPointIndex());
+
+            SubLine subLine = border.getSubLine();
+            Point startPoint = subLine.getStartPoint() == null
+                    ? new Point(
+                        subLine.getAnyPoint().x - subLine.getDx() * MAX_COORDINATE,
+                        subLine.getAnyPoint().y - subLine.getDy() * MAX_COORDINATE)
+                    : subLine.getStartPoint();
+            Point endPoint = subLine.getEndPoint() == null
+                    ? new Point(
+                        subLine.getAnyPoint().x + subLine.getDx() * MAX_COORDINATE,
+                        subLine.getAnyPoint().y + subLine.getDy() * MAX_COORDINATE)
+                    : subLine.getEndPoint();
             // Move the start point slightly towards p1 to break ties, then verify it is closest to
             // p1. Repeat for the other combinations.
-            assertThatPoint(start).movedSlightlyTowards(p1).isClosestTo(p1);
-            assertThatPoint(end).movedSlightlyTowards(p1).isClosestTo(p1);
-            assertThatPoint(start).movedSlightlyTowards(p2).isClosestTo(p2);
-            assertThatPoint(end).movedSlightlyTowards(p2).isClosestTo(p2);
+            assertThatPoint(startPoint).movedSlightlyTowards(pl).isClosestTo(pl);
+            assertThatPoint(endPoint).movedSlightlyTowards(pl).isClosestTo(pl);
+            assertThatPoint(startPoint).movedSlightlyTowards(pr).isClosestTo(pr);
+            assertThatPoint(endPoint).movedSlightlyTowards(pr).isClosestTo(pr);
         }
     }
 
@@ -76,8 +85,8 @@ public final class VoronoiTest2 {
 
         PointAssert movedSlightlyTowards(Point other) {
             return new PointAssert(new Point(
-                other.x * WIGGLE_RATIO + point.x * (1 - WIGGLE_RATIO),
-                other.y * WIGGLE_RATIO + point.y * (1 - WIGGLE_RATIO)));
+                other.x * SLIGHT_RATIO + point.x * (1 - SLIGHT_RATIO),
+                other.y * SLIGHT_RATIO + point.y * (1 - SLIGHT_RATIO)));
         }
 
         void isClosestTo(Point expectedClosest) {
