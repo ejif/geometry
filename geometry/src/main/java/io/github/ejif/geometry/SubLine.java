@@ -3,6 +3,7 @@ package io.github.ejif.geometry;
 
 import javax.annotation.Nullable;
 
+import lombok.Builder;
 import lombok.Data;
 
 /**
@@ -13,6 +14,7 @@ import lombok.Data;
  * For example, the positive x-axis could correspond to anyPoint=(0, 0), dx=1, dy=0, startPoint=(0,
  * 0), endPoint=null.
  */
+@Builder(toBuilder = true)
 @Data
 public final class SubLine {
 
@@ -24,6 +26,20 @@ public final class SubLine {
     private final Point startPoint;
     @Nullable
     private final Point endPoint;
+
+    /**
+     * Returns the same line segment/ray/line, but in the opposite direction.
+     *
+     * @return the flipped subline
+     */
+    public SubLine flip() {
+        return toBuilder()
+            .dx(-dx)
+            .dy(-dy)
+            .startPoint(endPoint)
+            .endPoint(startPoint)
+            .build();
+    }
 
     /**
      * Returns a subset of this line that is guaranteed to be finite (a line segment).
@@ -39,6 +55,9 @@ public final class SubLine {
         Point newEndPoint = endPoint == null
                 ? new Point(anyPoint.x + maxNumSteps * dx, anyPoint.y + maxNumSteps * dy)
                 : endPoint;
-        return new SubLine(anyPoint, dx, dy, newStartPoint, newEndPoint);
+        return toBuilder()
+            .startPoint(newStartPoint)
+            .endPoint(newEndPoint)
+            .build();
     }
 }

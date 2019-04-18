@@ -28,7 +28,11 @@ public final class VoronoiTest {
         Set<Border> borders = Voronoi.createVoronoiDiagram(ImmutableList.of(new Point(0, 0), new Point(200, 100))).getBorders();
         assertThat(borders).hasSize(1);
         assertThat(Iterables.getOnlyElement(borders).getSubLine())
-            .isEqualTo(new SubLine(new Point(100, 50), -100, 200, null, null));
+            .isEqualTo(SubLine.builder()
+                .anyPoint(new Point(100, 50))
+                .dx(-100)
+                .dy(200)
+                .build());
     }
 
     @Test(timeout = 1000) // milliseconds

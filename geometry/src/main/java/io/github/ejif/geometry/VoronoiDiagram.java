@@ -49,11 +49,8 @@ public final class VoronoiDiagram {
     public Map<Integer, Region> toRegions() {
         Multimap<Integer, SubLine> allEdges = ArrayListMultimap.create();
         for (Border border : borders) {
-            SubLine subLine = border.subLine;
-            allEdges.put(border.leftPointIndex, subLine);
-            SubLine flippedSubLine = new SubLine(subLine.getAnyPoint(), -subLine.getDx(), -subLine.getDy(), subLine.getEndPoint(),
-                subLine.getStartPoint());
-            allEdges.put(border.rightPointIndex, flippedSubLine);
+            allEdges.put(border.leftPointIndex, border.subLine);
+            allEdges.put(border.rightPointIndex, border.subLine.flip());
         }
         ImmutableMap.Builder<Integer, Region> regions = ImmutableMap.builder();
         for (int pointIndex : allEdges.keySet()) {

@@ -316,10 +316,13 @@ public final class Voronoi {
     private static Border toBorder(PointPair pointPair, Point startPoint, Point endPoint, List<Point> points) {
         Point pl = points.get(pointPair.leftPointIndex);
         Point pr = points.get(pointPair.rightPointIndex);
-        return new Border(
-            pointPair.leftPointIndex,
-            pointPair.rightPointIndex,
-            new SubLine(new Point((pl.x + pr.x) / 2, (pl.y + pr.y) / 2), pl.y - pr.y, pr.x - pl.x, startPoint, endPoint));
+        return new Border(pointPair.leftPointIndex, pointPair.rightPointIndex, SubLine.builder()
+            .anyPoint(new Point((pl.x + pr.x) / 2, (pl.y + pr.y) / 2))
+            .dx(pl.y - pr.y)
+            .dy(pr.x - pl.x)
+            .startPoint(startPoint)
+            .endPoint(endPoint)
+            .build());
     }
 
     private interface Event {
