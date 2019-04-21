@@ -28,6 +28,15 @@ public final class SubLine {
     private final Point endPoint;
 
     /**
+     * Returns a point on the line after the given point, in the direction of the line.
+     *
+     * @return the other point
+     */
+    public Point getAnyLaterPoint() {
+        return new Point(anyPoint.x + dx, anyPoint.y + dy);
+    }
+
+    /**
      * Returns the same line segment/ray/line, but in the opposite direction.
      *
      * @return the flipped subline
