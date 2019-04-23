@@ -58,4 +58,35 @@ public class TrapezoidalMapTest {
         assertThat(map.findRegion(new Point(2, 1))).isEqualTo(2);
         assertThat(map.findRegion(new Point(1, -1))).isEqualTo(2);
     }
+
+    /**
+     * <pre>
+     *  1
+     * ___
+     *  2
+     * ___
+     *  3
+     * </pre>
+     */
+    @Test
+    public void testParallelSplit() {
+        TrapezoidalMap map = new TrapezoidalMap(1e-6);
+        map.addLine(SubLine.builder()
+            .anyPoint(new Point(0, 0))
+            .dx(1)
+            .dy(0)
+            .startPoint(new Point(Double.NEGATIVE_INFINITY, 0))
+            .endPoint(new Point(Double.POSITIVE_INFINITY, 0))
+            .build(), 2, 3);
+        map.addLine(SubLine.builder()
+            .anyPoint(new Point(0, 100))
+            .dx(1)
+            .dy(0)
+            .startPoint(new Point(Double.NEGATIVE_INFINITY, 0))
+            .endPoint(new Point(Double.POSITIVE_INFINITY, 0))
+            .build(), 1, 2);
+        assertThat(map.findRegion(new Point(0, -1))).isEqualTo(3);
+        assertThat(map.findRegion(new Point(0, 50))).isEqualTo(2);
+        assertThat(map.findRegion(new Point(0, 101))).isEqualTo(1);
+    }
 }

@@ -6,10 +6,14 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 
 import io.github.ejif.geometry.algorithm.Points;
+import io.github.ejif.geometry.algorithm.Voronoi;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -17,7 +21,8 @@ import lombok.RequiredArgsConstructor;
 
 public final class TrapezoidalMap {
 
-    private static AtomicInteger NODE_ID = new AtomicInteger();
+    private static final Logger log = LoggerFactory.getLogger(Voronoi.class);
+    private static AtomicInteger nodeId = new AtomicInteger();
 
     private DagNode root;
     private double shear;
@@ -170,6 +175,8 @@ public final class TrapezoidalMap {
             endTrapezoid.rightBottom.leftTop = topTrapezoids.get(topTrapezoids.size() - 1);
             endTrapezoid.rightBottom.leftBottom = bottomTrapezoids.get(bottomTrapezoids.size() - 1);
         }
+
+        log.debug("Trapezoidal map:\n{}\n", this);
     }
 
     private XNodeDagNode splitVertically(Trapezoid trapezoid, Point splitPoint) {
@@ -263,7 +270,7 @@ public final class TrapezoidalMap {
     @Data
     private static final class XNodeDagNode implements DagNode {
 
-        final int id = NODE_ID.incrementAndGet();
+        final int id = nodeId.incrementAndGet();
         final double x;
         DagNode left;
         DagNode right;
@@ -312,7 +319,7 @@ public final class TrapezoidalMap {
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
     private static final class YNodeDagNode implements DagNode {
 
-        final int id = NODE_ID.incrementAndGet();
+        final int id = nodeId.incrementAndGet();
         final SubLine subLine;
         DagNode top;
         DagNode bottom;
@@ -364,7 +371,7 @@ public final class TrapezoidalMap {
     @Data
     private static final class Trapezoid implements DagNode {
 
-        final int id = NODE_ID.incrementAndGet();
+        final int id = nodeId.incrementAndGet();
         final int region;
         final Point left;
         final Point right;
@@ -431,7 +438,7 @@ public final class TrapezoidalMap {
                 subLine.getAnyLaterPoint(),
                 node.subLine.getAnyPoint(),
                 node.subLine.getAnyLaterPoint());
-            if (subLine.getStartPoint() == null) {
+            if (Double.isInfinite(subLine.getStartPoint().x)) {
                 if (newLineToOldLine > 0 || newLineToOldLine == 0 && getPointAt(subLine, 0).y > getPointAt(node.subLine, 0).y)
                     return node.top.visit(this);
                 else
