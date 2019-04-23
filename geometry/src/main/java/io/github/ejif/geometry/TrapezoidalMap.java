@@ -70,8 +70,8 @@ public final class TrapezoidalMap {
     }
 
     private Point shear(Point point) {
-        if (point == null)
-            return null;
+        if (Double.isInfinite(point.x))
+            return point;
         return new Point(point.x + shear * point.y, point.y);
     }
 
@@ -81,13 +81,11 @@ public final class TrapezoidalMap {
         assert subLine.getEndPoint() != null;
 
         Trapezoid startTrapezoid = root.visit(new FindTrapezoidDagNodeVisitor(subLine));
-        double startX = subLine.getStartPoint() == null ? Double.NEGATIVE_INFINITY : subLine.getStartPoint().x;
-        if (startTrapezoid.left.x != startX)
+        if (startTrapezoid.left.x != subLine.getStartPoint().x)
             startTrapezoid = (Trapezoid) splitVertically(startTrapezoid, subLine.getStartPoint()).right;
 
         Trapezoid endTrapezoid = root.visit(new FindTrapezoidDagNodeVisitor(subLine.flip()));
-        double endX = subLine.getEndPoint() == null ? Double.POSITIVE_INFINITY : subLine.getEndPoint().x;
-        if (endTrapezoid.right.x != endX)
+        if (endTrapezoid.right.x != subLine.getEndPoint().x)
             endTrapezoid = (Trapezoid) splitVertically(endTrapezoid, subLine.getEndPoint()).left;
 
         // Check if the line goes through only one trapezoid.
@@ -423,8 +421,7 @@ public final class TrapezoidalMap {
 
         @Override
         public Trapezoid visitXNode(XNodeDagNode node) {
-            if (subLine.getStartPoint() == null || subLine.getStartPoint().x < node.x
-                    || subLine.getStartPoint().x == node.x && subLine.getEndPoint().x < node.x) {
+            if (subLine.getStartPoint().x < node.x || subLine.getStartPoint().x == node.x && subLine.getEndPoint().x < node.x) {
                 return node.left.visit(this);
             } else {
                 return node.right.visit(this);
