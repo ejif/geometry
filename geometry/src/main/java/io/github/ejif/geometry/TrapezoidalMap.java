@@ -27,6 +27,13 @@ public final class TrapezoidalMap {
     private DagNode root;
     private double shear;
 
+    /*
+     * Creates a trapezoidal map with a random shear.
+     */
+    public TrapezoidalMap() {
+        this(Math.random());
+    }
+
     @VisibleForTesting
     TrapezoidalMap(double shear) {
         this.root = Trapezoid.builder()
@@ -37,16 +44,51 @@ public final class TrapezoidalMap {
         this.shear = shear;
     }
 
+    /**
+     * Adds a directed edge to the trapezoidal map. The edge cannot intersect any of the other edges
+     * in the trapezoidal map, other than sharing an end-point with another edge.
+     *
+     * @param edge
+     *            the edge to add
+     * @param leftRegion
+     *            an ID of the region on the left of the edge
+     * @param rightRegion
+     *            an ID of the region on the right of the edge
+     */
+    public void addEdge(DirectedEdge edge, int leftRegion, int rightRegion) {
+        double newDx = edge.getDx() + shear * edge.getDy();
+        assert newDx != 0;
+        if (newDx < 0)
+            edge = edge.flip();
+        DirectedEdge shearedEdge = DirectedEdge.builder()
+            .anyPoint(shear(edge.getAnyPoint()))
+            .dx(Math.abs(newDx))
+            .dy(edge.getDy())
+            .startPoint(edge.getStartPoint() == null ? new Point(Double.NEGATIVE_INFINITY, 0) : shear(edge.getStartPoint()))
+            .endPoint(edge.getEndPoint() == null ? new Point(Double.POSITIVE_INFINITY, 0) : shear(edge.getEndPoint()))
+            .build();
+        if (newDx < 0)
+            addCanonicalLine(shearedEdge, rightRegion, leftRegion);
+        else
+            addCanonicalLine(shearedEdge, leftRegion, rightRegion);
+    }
+
+    /**
+     * Finds the ID of the region that the given point is in.
+     *
+     * @param point
+     *            the point to find the region for
+     * @return the ID of the region
+     */
     public int findRegion(Point point) {
-        DirectedEdge edge = DirectedEdge.builder()
-            .anyPoint(point)
+        Point shearedPoint = shear(point);
+        return root.visit(new FindTrapezoidDagNodeVisitor(DirectedEdge.builder()
+            .anyPoint(shearedPoint)
             .dx(0)
             .dy(0)
-            .startPoint(point)
-            .endPoint(point)
-            .build();
-        edge = shear(edge);
-        return root.visit(new FindTrapezoidDagNodeVisitor(edge)).region;
+            .startPoint(shearedPoint)
+            .endPoint(shearedPoint)
+            .build())).region;
     }
 
     @Override
@@ -54,28 +96,11 @@ public final class TrapezoidalMap {
         return root.toString();
     }
 
-    @VisibleForTesting
-    void addLine(DirectedEdge edge, int topRegion, int bottomRegion) {
-        addShearedLine(shear(edge), topRegion, bottomRegion);
-    }
-
-    private DirectedEdge shear(DirectedEdge edge) {
-        return DirectedEdge.builder()
-            .anyPoint(shear(edge.getAnyPoint()))
-            .dx(edge.getDx() + shear * edge.getDy())
-            .dy(edge.getDy())
-            .startPoint(shear(edge.getStartPoint()))
-            .endPoint(shear(edge.getEndPoint()))
-            .build();
-    }
-
     private Point shear(Point point) {
-        if (Double.isInfinite(point.x))
-            return point;
         return new Point(point.x + shear * point.y, point.y);
     }
 
-    private void addShearedLine(DirectedEdge edge, int topRegion, int bottomRegion) {
+    private void addCanonicalLine(DirectedEdge edge, int topRegion, int bottomRegion) {
         assert edge.getDx() > 0;
         assert edge.getStartPoint() != null;
         assert edge.getEndPoint() != null;
@@ -430,12 +455,12 @@ public final class TrapezoidalMap {
 
         @Override
         public Trapezoid visitYNode(YNodeDagNode node) {
-            double newLineToOldLine = Points.crossProduct(
-                edge.getAnyPoint(),
-                edge.getAnyLaterPoint(),
-                node.edge.getAnyPoint(),
-                node.edge.getAnyLaterPoint());
             if (Double.isInfinite(edge.getStartPoint().x)) {
+                double newLineToOldLine = Points.crossProduct(
+                    edge.getAnyPoint(),
+                    edge.getAnyLaterPoint(),
+                    node.edge.getAnyPoint(),
+                    node.edge.getAnyLaterPoint());
                 if (newLineToOldLine > 0 || newLineToOldLine == 0 && getPointAt(edge, 0).y > getPointAt(node.edge, 0).y)
                     return node.top.visit(this);
                 else
@@ -446,8 +471,7 @@ public final class TrapezoidalMap {
                     node.edge.getAnyLaterPoint(),
                     node.edge.getAnyPoint(),
                     edge.getStartPoint());
-                // TODO only need to check newLineToOldLine if an endpoint can intersect another line
-                if (oldLineToPoint > 0 || oldLineToPoint == 0 && newLineToOldLine < 0)
+                if (oldLineToPoint > 0)
                     return node.top.visit(this);
                 else
                     return node.bottom.visit(this);

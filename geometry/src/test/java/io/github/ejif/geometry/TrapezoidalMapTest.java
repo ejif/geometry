@@ -6,6 +6,8 @@ import org.junit.Test;
 
 public final class TrapezoidalMapTest {
 
+    private static final double SHEAR = 1e-6;
+
     /**
      * <pre>
      *   1
@@ -15,14 +17,8 @@ public final class TrapezoidalMapTest {
      */
     @Test
     public void testSingleLine() {
-        TrapezoidalMap map = new TrapezoidalMap(1e-6);
-        map.addLine(DirectedEdge.builder()
-            .anyPoint(new Point(0, 0))
-            .dx(1)
-            .dy(0)
-            .startPoint(new Point(Double.NEGATIVE_INFINITY, 0))
-            .endPoint(new Point(Double.POSITIVE_INFINITY, 0))
-            .build(), 1, 2);
+        TrapezoidalMap map = new TrapezoidalMap(SHEAR);
+        map.addEdge(DirectedEdge.line(new Point(0, 0), new Point(1, 0)), 1, 2);
         assertThat(map.findRegion(new Point(0, 1))).isEqualTo(1);
         assertThat(map.findRegion(new Point(0, -1))).isEqualTo(2);
     }
@@ -37,21 +33,9 @@ public final class TrapezoidalMapTest {
      */
     @Test
     public void testTwoRays() {
-        TrapezoidalMap map = new TrapezoidalMap(1e-6);
-        map.addLine(DirectedEdge.builder()
-            .anyPoint(new Point(0, 0))
-            .dx(1)
-            .dy(0)
-            .startPoint(new Point(Double.NEGATIVE_INFINITY, 0))
-            .endPoint(new Point(0, 0))
-            .build(), 1, 2);
-        map.addLine(DirectedEdge.builder()
-            .anyPoint(new Point(0, 0))
-            .dx(1)
-            .dy(1)
-            .startPoint(new Point(0, 0))
-            .endPoint(new Point(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY))
-            .build(), 1, 2);
+        TrapezoidalMap map = new TrapezoidalMap(SHEAR);
+        map.addEdge(DirectedEdge.ray(new Point(0, 0), -1, 0), 2, 1);
+        map.addEdge(DirectedEdge.ray(new Point(0, 0), 1, 1), 1, 2);
         assertThat(map.findRegion(new Point(-1, 1))).isEqualTo(1);
         assertThat(map.findRegion(new Point(1, 2))).isEqualTo(1);
         assertThat(map.findRegion(new Point(-1, -1))).isEqualTo(2);
@@ -69,21 +53,9 @@ public final class TrapezoidalMapTest {
      */
     @Test
     public void testTwoRaysReverseOrder() {
-        TrapezoidalMap map = new TrapezoidalMap(1e-6);
-        map.addLine(DirectedEdge.builder()
-            .anyPoint(new Point(0, 0))
-            .dx(1)
-            .dy(0)
-            .startPoint(new Point(0, 0))
-            .endPoint(new Point(Double.POSITIVE_INFINITY, 0))
-            .build(), 1, 2);
-        map.addLine(DirectedEdge.builder()
-            .anyPoint(new Point(0, 0))
-            .dx(1)
-            .dy(-1)
-            .startPoint(new Point(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY))
-            .endPoint(new Point(0, 0))
-            .build(), 1, 2);
+        TrapezoidalMap map = new TrapezoidalMap(SHEAR);
+        map.addEdge(DirectedEdge.ray(new Point(0, 0), 1, 0), 1, 2);
+        map.addEdge(DirectedEdge.ray(new Point(0, 0), -1, 1), 2, 1);
         assertThat(map.findRegion(new Point(-1, 2))).isEqualTo(1);
         assertThat(map.findRegion(new Point(1, 1))).isEqualTo(1);
         assertThat(map.findRegion(new Point(-2, 1))).isEqualTo(2);
@@ -102,21 +74,9 @@ public final class TrapezoidalMapTest {
      */
     @Test
     public void testNonintersectingLines() {
-        TrapezoidalMap map = new TrapezoidalMap(1e-6);
-        map.addLine(DirectedEdge.builder()
-            .anyPoint(new Point(0, 0))
-            .dx(1)
-            .dy(0)
-            .startPoint(new Point(Double.NEGATIVE_INFINITY, 0))
-            .endPoint(new Point(Double.POSITIVE_INFINITY, 0))
-            .build(), 2, 3);
-        map.addLine(DirectedEdge.builder()
-            .anyPoint(new Point(0, 100))
-            .dx(1)
-            .dy(0)
-            .startPoint(new Point(Double.NEGATIVE_INFINITY, 0))
-            .endPoint(new Point(Double.POSITIVE_INFINITY, 0))
-            .build(), 1, 2);
+        TrapezoidalMap map = new TrapezoidalMap(SHEAR);
+        map.addEdge(DirectedEdge.line(new Point(0, 0), new Point(1, 0)), 2, 3);
+        map.addEdge(DirectedEdge.line(new Point(0, 100), new Point(1, 100)), 1, 2);
         assertThat(map.findRegion(new Point(0, -1))).isEqualTo(3);
         assertThat(map.findRegion(new Point(0, 50))).isEqualTo(2);
         assertThat(map.findRegion(new Point(0, 101))).isEqualTo(1);
@@ -133,28 +93,10 @@ public final class TrapezoidalMapTest {
      */
     @Test
     public void testTriangle() {
-        TrapezoidalMap map = new TrapezoidalMap(1e-6);
-        map.addLine(DirectedEdge.builder()
-            .anyPoint(new Point(0, 0))
-            .dx(1)
-            .dy(2)
-            .startPoint(new Point(0, 0))
-            .endPoint(new Point(50, 100))
-            .build(), 1, 3);
-        map.addLine(DirectedEdge.builder()
-            .anyPoint(new Point(100, 0))
-            .dx(1)
-            .dy(-2)
-            .startPoint(new Point(50, 100))
-            .endPoint(new Point(100, 0))
-            .build(), 2, 3);
-        map.addLine(DirectedEdge.builder()
-            .anyPoint(new Point(0, 0))
-            .dx(1)
-            .dy(0)
-            .startPoint(new Point(0, 0))
-            .endPoint(new Point(100, 0))
-            .build(), 3, 4);
+        TrapezoidalMap map = new TrapezoidalMap(SHEAR);
+        map.addEdge(DirectedEdge.segment(new Point(0, 0), new Point(50, 100)), 1, 3);
+        map.addEdge(DirectedEdge.segment(new Point(50, 100), new Point(100, 0)), 2, 3);
+        map.addEdge(DirectedEdge.segment(new Point(100, 0), new Point(0, 0)), 4, 3);
         assertThat(map.findRegion(new Point(25, 75))).isEqualTo(1);
         assertThat(map.findRegion(new Point(75, 75))).isEqualTo(2);
         assertThat(map.findRegion(new Point(25, 25))).isEqualTo(3);

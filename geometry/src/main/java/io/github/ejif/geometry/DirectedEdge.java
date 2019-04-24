@@ -28,6 +28,64 @@ public final class DirectedEdge {
     private final Point endPoint;
 
     /**
+     * Creates a directed line segment from the start point to the end point.
+     *
+     * @param startPoint
+     *            the point to start at
+     * @param endPoint
+     *            the point to end at
+     * @return the directed line segment
+     */
+    public static DirectedEdge segment(Point startPoint, Point endPoint) {
+        return DirectedEdge.builder()
+            .anyPoint(startPoint)
+            .dx(endPoint.x - startPoint.x)
+            .dy(endPoint.y - startPoint.y)
+            .startPoint(startPoint)
+            .endPoint(endPoint)
+            .build();
+    }
+
+    /**
+     * Creates a ray starting at the given point with the given heading.
+     *
+     * @param startPoint
+     *            the point to start at
+     * @param dx
+     *            the x component of a vector along this ray
+     * @param dy
+     *            the y component of the same vector along this ray
+     * @return the ray
+     */
+    public static DirectedEdge ray(Point startPoint, double dx, double dy) {
+        return DirectedEdge.builder()
+            .anyPoint(startPoint)
+            .dx(dx)
+            .dy(dy)
+            .startPoint(startPoint)
+            .build();
+    }
+
+    /**
+     * Creates a line through the two given points, directed from the first point to the second
+     * point.
+     *
+     * @param anyPoint
+     *            any point on the line
+     * @param anyOtherPoint
+     *            any other point on the line, in the direction of the line from the first given
+     *            point
+     * @return the directed line
+     */
+    public static DirectedEdge line(Point anyPoint, Point anyOtherPoint) {
+        return DirectedEdge.builder()
+            .anyPoint(anyPoint)
+            .dx(anyOtherPoint.x - anyPoint.x)
+            .dy(anyOtherPoint.y - anyPoint.y)
+            .build();
+    }
+
+    /**
      * Returns a point on the line after the given point, in the direction of the line.
      *
      * @return the other point
