@@ -5,14 +5,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import io.github.ejif.geometry.Point;
 import io.github.ejif.geometry.DirectedEdge;
+import io.github.ejif.geometry.Point;
+import io.github.ejif.geometry.TestUtils;
 import lombok.Data;
 
 /**
@@ -23,24 +23,16 @@ import lombok.Data;
 @RunWith(Parameterized.class)
 public final class VoronoiRegionsTest {
 
-    public static final int NUM_TEST_CASES = 10;
-    public static final int MIN_NUM_POINTS = 5;
-    public static final double MAX_COORDINATE = 1000;
+    public static final double MAX_NUM_STEPS = 1000;
     public static final double SLIGHT_RATIO = 1e-3;
 
     private final List<Point> points;
 
     @Parameterized.Parameters
     public static List<?> parameters() {
-        Random random = new Random(2915);
         List<List<Point>> parameters = new ArrayList<>();
-        for (int i = 0; i < NUM_TEST_CASES; i++) {
-            int testCaseSize = MIN_NUM_POINTS + i;
-            List<Point> points = new ArrayList<>();
-            for (int j = 0; j < testCaseSize; j++)
-                points.add(new Point(random.nextDouble() * MAX_COORDINATE, random.nextDouble() * MAX_COORDINATE));
-            parameters.add(points);
-        }
+        for (int i = 0; i < 10; i++)
+            parameters.add(TestUtils.randomPoints(5 + i));
         return parameters;
     }
 
@@ -50,32 +42,16 @@ public final class VoronoiRegionsTest {
             Point p = points.get(pointIndex);
             // Verify that each vertex in this region, when moved slightly closer to the region's
             // point to break ties, is closest to the region's point than to any other point.
-            for (DirectedEdge edge : region.getEdges())
-                assertThatPoint(edge.toFiniteSegment(MAX_COORDINATE).getStartPoint()).movedSlightlyTowards(p).isClosestTo(p);
+            for (DirectedEdge edge : region.getEdges()) {
+                Point cornerPoint = edge.toFiniteSegment(MAX_NUM_STEPS).getStartPoint();
+                assertThat(TestUtils.findClosestPoint(points, moveSlightlyTowards(cornerPoint, p))).isEqualTo(p);
+            }
         });
     }
 
-    private PointAssert assertThatPoint(Point point) {
-        return new PointAssert(point);
-    }
-
-    @Data
-    private final class PointAssert {
-
-        final Point point;
-
-        PointAssert movedSlightlyTowards(Point other) {
-            return new PointAssert(new Point(
-                other.x * SLIGHT_RATIO + point.x * (1 - SLIGHT_RATIO),
-                other.y * SLIGHT_RATIO + point.y * (1 - SLIGHT_RATIO)));
-        }
-
-        void isClosestTo(Point expectedClosest) {
-            Point closest = points.get(0);
-            for (Point p : points)
-                if (Points.distance(point, p) < Points.distance(point, closest))
-                    closest = p;
-            assertThat(closest).isEqualTo(expectedClosest);
-        }
+    private static Point moveSlightlyTowards(Point point, Point target) {
+        return new Point(
+            target.x * SLIGHT_RATIO + point.x * (1 - SLIGHT_RATIO),
+            target.y * SLIGHT_RATIO + point.y * (1 - SLIGHT_RATIO));
     }
 }

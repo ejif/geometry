@@ -1,12 +1,16 @@
-package io.github.ejif.geometry;
+package io.github.ejif.geometry.algorithm;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Test;
 
+import io.github.ejif.geometry.DirectedEdge;
+import io.github.ejif.geometry.Point;
+import io.github.ejif.geometry.TestUtils;
+
 public final class TrapezoidalMapTest {
 
-    private final TrapezoidalMap map = new TrapezoidalMap(1e-6);
+    private final TrapezoidalMap map = new TrapezoidalMap(TestUtils.RNG);
 
     /**
      * <pre>

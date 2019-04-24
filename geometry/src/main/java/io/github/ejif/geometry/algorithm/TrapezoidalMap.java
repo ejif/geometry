@@ -1,8 +1,9 @@
 
-package io.github.ejif.geometry;
+package io.github.ejif.geometry.algorithm;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -12,8 +13,8 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 
-import io.github.ejif.geometry.algorithm.Points;
-import io.github.ejif.geometry.algorithm.Voronoi;
+import io.github.ejif.geometry.DirectedEdge;
+import io.github.ejif.geometry.Point;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -32,17 +33,17 @@ public final class TrapezoidalMap {
      * the same x coordinate, which makes the algorithm much simpler).
      */
     public TrapezoidalMap() {
-        this(Math.random());
+        this(new Random());
     }
 
     @VisibleForTesting
-    TrapezoidalMap(double shear) {
+    TrapezoidalMap(Random random) {
         this.root = Trapezoid.builder()
             .region(-1)
             .left(new Point(Double.NEGATIVE_INFINITY, 0))
             .right(new Point(Double.POSITIVE_INFINITY, 0))
             .build();
-        this.shear = shear;
+        this.shear = random.nextDouble() * 1e-6;
     }
 
     /**
@@ -136,6 +137,9 @@ public final class TrapezoidalMap {
             topTrapezoids.add(topTrapezoid);
             bottomTrapezoids.add(bottomTrapezoid);
 
+            if (currentTrapezoid == endTrapezoid)
+                break;
+
             // Update the trapezoid pointers, and then find the next trapezoid on the right.
             Point rightIntersection = getPointAt(edge, currentTrapezoid.right.x);
             if (rightIntersection.y > currentTrapezoid.right.y && currentTrapezoid.rightTop != null) {
@@ -145,10 +149,9 @@ public final class TrapezoidalMap {
                 currentTrapezoid = currentTrapezoid.rightBottom;
                 movedToRightTops.add(false);
             } else {
-                // We assume the new line cannot intersect the end-point of another line other than
-                // at its own end-point, so this was the last trapezoid to split.
-                assert currentTrapezoid == endTrapezoid;
-                break;
+                // This cannot happen because only the end of the edge can intersect another line,
+                // but then we would have broken out of the loop above.
+                assert false;
             }
         }
 
@@ -458,13 +461,18 @@ public final class TrapezoidalMap {
                     return node.top.visit(this);
                 else
                     return node.bottom.visit(this);
+            } else if (edge.getStartPoint().equals(node.edge.getStartPoint()) || edge.getStartPoint().equals(node.edge.getEndPoint())) {
+                if (newLineToOldLine < 0)
+                    return node.top.visit(this);
+                else
+                    return node.bottom.visit(this);
             } else {
                 double oldLineToPoint = Points.crossProduct(
                     node.edge.getAnyPoint(),
                     node.edge.getAnyLaterPoint(),
                     node.edge.getAnyPoint(),
                     edge.getStartPoint());
-                if (oldLineToPoint > 0 || oldLineToPoint == 0 && newLineToOldLine < 0)
+                if (oldLineToPoint > 0)
                     return node.top.visit(this);
                 else
                     return node.bottom.visit(this);

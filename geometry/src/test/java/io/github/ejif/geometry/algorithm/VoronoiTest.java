@@ -3,9 +3,6 @@ package io.github.ejif.geometry.algorithm;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
 import java.util.Set;
 
 import org.junit.Test;
@@ -16,12 +13,10 @@ import com.google.common.collect.Iterables;
 
 import io.github.ejif.geometry.DirectedEdge;
 import io.github.ejif.geometry.Point;
+import io.github.ejif.geometry.TestUtils;
 import io.github.ejif.geometry.VoronoiDiagram.Border;
 
 public final class VoronoiTest {
-
-    public static final int NUM_POINTS = 10000;
-    public static final double MAX_COORDINATE = 1000;
 
     @Test
     public void testGeneratedVoronoiDiagram_hasBorderOnPerpendicularBisector() {
@@ -39,11 +34,6 @@ public final class VoronoiTest {
     public void testCreateVoronoiDiagram_isPerformant() {
         // Ensure that DEBUG logging, which is not performant, is disabled.
         assertThat(LoggerFactory.getLogger(Voronoi.class).isDebugEnabled()).isFalse();
-
-        Random random = new Random(2915);
-        List<Point> points = new ArrayList<>();
-        for (int i = 0; i < NUM_POINTS; i++)
-            points.add(new Point(random.nextDouble() * MAX_COORDINATE, random.nextDouble() * MAX_COORDINATE));
-        Voronoi.createVoronoiDiagram(points);
+        Voronoi.createVoronoiDiagram(TestUtils.randomPoints(10000));
     }
 }
