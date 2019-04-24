@@ -27,8 +27,9 @@ public final class TrapezoidalMap {
     private DagNode root;
     private double shear;
 
-    /*
-     * Creates a trapezoidal map with a random shear.
+    /**
+     * Creates a trapezoidal map with a random shear (to ensure that no two distinct points share
+     * the same x coordinate, which makes the algorithm much simpler).
      */
     public TrapezoidalMap() {
         this(Math.random());
@@ -303,14 +304,10 @@ public final class TrapezoidalMap {
             XNodeDagNode node = new XNodeDagNode(x);
             node.left = left;
             node.right = right;
-            if (left != null) {
-                left.getParents().clear();
-                left.getParents().add(node);
-            }
-            if (right != null) {
-                right.getParents().clear();
-                right.getParents().add(node);
-            }
+            left.getParents().clear();
+            left.getParents().add(node);
+            right.getParents().clear();
+            right.getParents().add(node);
             return node;
         }
 
@@ -352,14 +349,10 @@ public final class TrapezoidalMap {
             YNodeDagNode node = new YNodeDagNode(edge);
             node.top = top;
             node.bottom = bottom;
-            if (top != null) {
-                top.getParents().clear();
-                top.getParents().add(node);
-            }
-            if (bottom != null) {
-                bottom.getParents().clear();
-                bottom.getParents().add(node);
-            }
+            top.getParents().clear();
+            top.getParents().add(node);
+            bottom.getParents().clear();
+            bottom.getParents().add(node);
             return node;
         }
 
@@ -455,12 +448,12 @@ public final class TrapezoidalMap {
 
         @Override
         public Trapezoid visitYNode(YNodeDagNode node) {
+            double newLineToOldLine = Points.crossProduct(
+                edge.getAnyPoint(),
+                edge.getAnyLaterPoint(),
+                node.edge.getAnyPoint(),
+                node.edge.getAnyLaterPoint());
             if (Double.isInfinite(edge.getStartPoint().x)) {
-                double newLineToOldLine = Points.crossProduct(
-                    edge.getAnyPoint(),
-                    edge.getAnyLaterPoint(),
-                    node.edge.getAnyPoint(),
-                    node.edge.getAnyLaterPoint());
                 if (newLineToOldLine > 0 || newLineToOldLine == 0 && getPointAt(edge, 0).y > getPointAt(node.edge, 0).y)
                     return node.top.visit(this);
                 else
@@ -471,7 +464,7 @@ public final class TrapezoidalMap {
                     node.edge.getAnyLaterPoint(),
                     node.edge.getAnyPoint(),
                     edge.getStartPoint());
-                if (oldLineToPoint > 0)
+                if (oldLineToPoint > 0 || oldLineToPoint == 0 && newLineToOldLine < 0)
                     return node.top.visit(this);
                 else
                     return node.bottom.visit(this);
