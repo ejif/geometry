@@ -37,7 +37,7 @@ public final class VoronoiDiagram {
 
         private final int leftPointIndex;
         private final int rightPointIndex;
-        private final SubLine subLine;
+        private final DirectedEdge edge;
     }
 
     /**
@@ -47,19 +47,19 @@ public final class VoronoiDiagram {
      * @return the regions
      */
     public Map<Integer, Region> toRegions() {
-        Multimap<Integer, SubLine> allEdges = ArrayListMultimap.create();
+        Multimap<Integer, DirectedEdge> allEdges = ArrayListMultimap.create();
         for (Border border : borders) {
-            allEdges.put(border.leftPointIndex, border.subLine);
-            allEdges.put(border.rightPointIndex, border.subLine.flip());
+            allEdges.put(border.leftPointIndex, border.edge);
+            allEdges.put(border.rightPointIndex, border.edge.flip());
         }
         ImmutableMap.Builder<Integer, Region> regions = ImmutableMap.builder();
         for (int pointIndex : allEdges.keySet()) {
-            List<SubLine> edges = new ArrayList<>(allEdges.get(pointIndex));
-            Map<Point, SubLine> edgesByStartPoint = new HashMap<>();
-            for (SubLine edge : edges.subList(1, edges.size()))
+            List<DirectedEdge> edges = new ArrayList<>(allEdges.get(pointIndex));
+            Map<Point, DirectedEdge> edgesByStartPoint = new HashMap<>();
+            for (DirectedEdge edge : edges.subList(1, edges.size()))
                 edgesByStartPoint.put(edge.getStartPoint(), edge);
-            ImmutableList.Builder<SubLine> orderedEdges = ImmutableList.builder();
-            for (SubLine edge = edges.get(0); edge != null; edge = edgesByStartPoint.remove(edge.getEndPoint()))
+            ImmutableList.Builder<DirectedEdge> orderedEdges = ImmutableList.builder();
+            for (DirectedEdge edge = edges.get(0); edge != null; edge = edgesByStartPoint.remove(edge.getEndPoint()))
                 orderedEdges.add(edge);
             regions.put(pointIndex, new Region(orderedEdges.build()));
         }

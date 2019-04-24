@@ -16,7 +16,7 @@ import lombok.Data;
  */
 @Builder(toBuilder = true)
 @Data
-public final class SubLine {
+public final class DirectedEdge {
 
     private final Point anyPoint;
     private final double dx;
@@ -39,9 +39,9 @@ public final class SubLine {
     /**
      * Returns the same line segment/ray/line, but in the opposite direction.
      *
-     * @return the flipped subline
+     * @return the flipped edge
      */
-    public SubLine flip() {
+    public DirectedEdge flip() {
         return toBuilder()
             .dx(-dx)
             .dy(-dy)
@@ -57,7 +57,7 @@ public final class SubLine {
      *            the maximum number of dx, dy steps to move away from anyPoint
      * @return the subset line segment
      */
-    public SubLine toFiniteSegment(double maxNumSteps) {
+    public DirectedEdge toFiniteSegment(double maxNumSteps) {
         Point newStartPoint = startPoint == null
                 ? new Point(anyPoint.x - maxNumSteps * dx, anyPoint.y - maxNumSteps * dy)
                 : startPoint;

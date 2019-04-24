@@ -13,5 +13,5 @@ public final class Region {
      * the start point of the next edge, and the end point of the last edge is equal to the start
      * point of the first edge (points at infinity are considered equal).
      */
-    private final List<SubLine> edges;
+    private final List<DirectedEdge> edges;
 }

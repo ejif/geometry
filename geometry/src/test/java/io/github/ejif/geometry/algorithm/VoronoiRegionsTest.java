@@ -12,7 +12,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import io.github.ejif.geometry.Point;
-import io.github.ejif.geometry.SubLine;
+import io.github.ejif.geometry.DirectedEdge;
 import lombok.Data;
 
 /**
@@ -50,7 +50,7 @@ public final class VoronoiRegionsTest {
             Point p = points.get(pointIndex);
             // Verify that each vertex in this region, when moved slightly closer to the region's
             // point to break ties, is closest to the region's point than to any other point.
-            for (SubLine edge : region.getEdges())
+            for (DirectedEdge edge : region.getEdges())
                 assertThatPoint(edge.toFiniteSegment(MAX_COORDINATE).getStartPoint()).movedSlightlyTowards(p).isClosestTo(p);
         });
     }

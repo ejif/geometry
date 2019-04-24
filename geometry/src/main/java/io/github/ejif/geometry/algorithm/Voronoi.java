@@ -23,7 +23,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.util.concurrent.AtomicDouble;
 
 import io.github.ejif.geometry.Point;
-import io.github.ejif.geometry.SubLine;
+import io.github.ejif.geometry.DirectedEdge;
 import io.github.ejif.geometry.VoronoiDiagram;
 import io.github.ejif.geometry.VoronoiDiagram.Border;
 import lombok.Builder;
@@ -316,7 +316,7 @@ public final class Voronoi {
     private static Border toBorder(PointPair pointPair, Point startPoint, Point endPoint, List<Point> points) {
         Point pl = points.get(pointPair.leftPointIndex);
         Point pr = points.get(pointPair.rightPointIndex);
-        return new Border(pointPair.leftPointIndex, pointPair.rightPointIndex, SubLine.builder()
+        return new Border(pointPair.leftPointIndex, pointPair.rightPointIndex, DirectedEdge.builder()
             .anyPoint(new Point((pl.x + pr.x) / 2, (pl.y + pr.y) / 2))
             .dx(pl.y - pr.y)
             .dy(pr.x - pl.x)

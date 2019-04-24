@@ -38,15 +38,15 @@ public final class TrapezoidalMap {
     }
 
     public int findRegion(Point point) {
-        SubLine subLine = SubLine.builder()
+        DirectedEdge edge = DirectedEdge.builder()
             .anyPoint(point)
             .dx(0)
             .dy(0)
             .startPoint(point)
             .endPoint(point)
             .build();
-        subLine = shear(subLine);
-        return root.visit(new FindTrapezoidDagNodeVisitor(subLine)).region;
+        edge = shear(edge);
+        return root.visit(new FindTrapezoidDagNodeVisitor(edge)).region;
     }
 
     @Override
@@ -55,17 +55,17 @@ public final class TrapezoidalMap {
     }
 
     @VisibleForTesting
-    void addLine(SubLine subLine, int topRegion, int bottomRegion) {
-        addShearedLine(shear(subLine), topRegion, bottomRegion);
+    void addLine(DirectedEdge edge, int topRegion, int bottomRegion) {
+        addShearedLine(shear(edge), topRegion, bottomRegion);
     }
 
-    private SubLine shear(SubLine subLine) {
-        return SubLine.builder()
-            .anyPoint(shear(subLine.getAnyPoint()))
-            .dx(subLine.getDx() + shear * subLine.getDy())
-            .dy(subLine.getDy())
-            .startPoint(shear(subLine.getStartPoint()))
-            .endPoint(shear(subLine.getEndPoint()))
+    private DirectedEdge shear(DirectedEdge edge) {
+        return DirectedEdge.builder()
+            .anyPoint(shear(edge.getAnyPoint()))
+            .dx(edge.getDx() + shear * edge.getDy())
+            .dy(edge.getDy())
+            .startPoint(shear(edge.getStartPoint()))
+            .endPoint(shear(edge.getEndPoint()))
             .build();
     }
 
@@ -75,18 +75,18 @@ public final class TrapezoidalMap {
         return new Point(point.x + shear * point.y, point.y);
     }
 
-    private void addShearedLine(SubLine subLine, int topRegion, int bottomRegion) {
-        assert subLine.getDx() > 0;
-        assert subLine.getStartPoint() != null;
-        assert subLine.getEndPoint() != null;
+    private void addShearedLine(DirectedEdge edge, int topRegion, int bottomRegion) {
+        assert edge.getDx() > 0;
+        assert edge.getStartPoint() != null;
+        assert edge.getEndPoint() != null;
 
-        Trapezoid startTrapezoid = root.visit(new FindTrapezoidDagNodeVisitor(subLine));
-        if (startTrapezoid.left.x != subLine.getStartPoint().x)
-            startTrapezoid = (Trapezoid) splitVertically(startTrapezoid, subLine.getStartPoint()).right;
+        Trapezoid startTrapezoid = root.visit(new FindTrapezoidDagNodeVisitor(edge));
+        if (startTrapezoid.left.x != edge.getStartPoint().x)
+            startTrapezoid = (Trapezoid) splitVertically(startTrapezoid, edge.getStartPoint()).right;
 
-        Trapezoid endTrapezoid = root.visit(new FindTrapezoidDagNodeVisitor(subLine.flip()));
-        if (endTrapezoid.right.x != subLine.getEndPoint().x)
-            endTrapezoid = (Trapezoid) splitVertically(endTrapezoid, subLine.getEndPoint()).left;
+        Trapezoid endTrapezoid = root.visit(new FindTrapezoidDagNodeVisitor(edge.flip()));
+        if (endTrapezoid.right.x != edge.getEndPoint().x)
+            endTrapezoid = (Trapezoid) splitVertically(endTrapezoid, edge.getEndPoint()).left;
 
         // Check if the line goes through only one trapezoid.
         if (startTrapezoid.left.x == endTrapezoid.left.x)
@@ -105,13 +105,13 @@ public final class TrapezoidalMap {
             Trapezoid bottomTrapezoid = currentTrapezoid.toBuilder()
                 .region(bottomRegion)
                 .build();
-            replaceNode(currentTrapezoid, YNodeDagNode.of(subLine, topTrapezoid, bottomTrapezoid));
+            replaceNode(currentTrapezoid, YNodeDagNode.of(edge, topTrapezoid, bottomTrapezoid));
             originalTrapezoids.add(currentTrapezoid);
             topTrapezoids.add(topTrapezoid);
             bottomTrapezoids.add(bottomTrapezoid);
 
             // Update the trapezoid pointers, and then find the next trapezoid on the right.
-            Point rightIntersection = getPointAt(subLine, currentTrapezoid.right.x);
+            Point rightIntersection = getPointAt(edge, currentTrapezoid.right.x);
             if (rightIntersection.y > currentTrapezoid.right.y && currentTrapezoid.rightTop != null) {
                 currentTrapezoid = currentTrapezoid.rightTop;
                 movedToRightTops.add(true);
@@ -248,10 +248,10 @@ public final class TrapezoidalMap {
         }
     }
 
-    private static Point getPointAt(SubLine subLine, double x) {
-        assert subLine.getDx() != 0;
-        Point p = subLine.getAnyPoint();
-        return new Point(x, p.y - (p.x - x) / subLine.getDx() * subLine.getDy());
+    private static Point getPointAt(DirectedEdge edge, double x) {
+        assert edge.getDx() != 0;
+        Point p = edge.getAnyPoint();
+        return new Point(x, p.y - (p.x - x) / edge.getDx() * edge.getDy());
     }
 
     private interface DagNode {
@@ -318,13 +318,13 @@ public final class TrapezoidalMap {
     private static final class YNodeDagNode implements DagNode {
 
         final int id = nodeId.incrementAndGet();
-        final SubLine subLine;
+        final DirectedEdge edge;
         DagNode top;
         DagNode bottom;
         final List<DagNode> parents = new ArrayList<>();
 
-        static YNodeDagNode of(SubLine subLine, DagNode top, DagNode bottom) {
-            YNodeDagNode node = new YNodeDagNode(subLine);
+        static YNodeDagNode of(DirectedEdge edge, DagNode top, DagNode bottom) {
+            YNodeDagNode node = new YNodeDagNode(edge);
             node.top = top;
             node.bottom = bottom;
             if (top != null) {
@@ -353,10 +353,10 @@ public final class TrapezoidalMap {
             return Strings.repeat(" ", indent) + String.format(
                 "YNode id=%d line=[%s, %s, %s, %s] top=%d bottom=%d parents=%s \n%s\n%s",
                 id,
-                subLine.getStartPoint(),
-                subLine.getAnyPoint(),
-                subLine.getAnyLaterPoint(),
-                subLine.getEndPoint(),
+                edge.getStartPoint(),
+                edge.getAnyPoint(),
+                edge.getAnyLaterPoint(),
+                edge.getEndPoint(),
                 top.getId(),
                 bottom.getId(),
                 parents.stream().map(DagNode::getId).collect(Collectors.toList()),
@@ -417,11 +417,11 @@ public final class TrapezoidalMap {
     @Data
     private static final class FindTrapezoidDagNodeVisitor implements DagNodeVisitor<Trapezoid> {
 
-        final SubLine subLine;
+        final DirectedEdge edge;
 
         @Override
         public Trapezoid visitXNode(XNodeDagNode node) {
-            if (subLine.getStartPoint().x < node.x || subLine.getStartPoint().x == node.x && subLine.getEndPoint().x < node.x) {
+            if (edge.getStartPoint().x < node.x || edge.getStartPoint().x == node.x && edge.getEndPoint().x < node.x) {
                 return node.left.visit(this);
             } else {
                 return node.right.visit(this);
@@ -431,21 +431,21 @@ public final class TrapezoidalMap {
         @Override
         public Trapezoid visitYNode(YNodeDagNode node) {
             double newLineToOldLine = Points.crossProduct(
-                subLine.getAnyPoint(),
-                subLine.getAnyLaterPoint(),
-                node.subLine.getAnyPoint(),
-                node.subLine.getAnyLaterPoint());
-            if (Double.isInfinite(subLine.getStartPoint().x)) {
-                if (newLineToOldLine > 0 || newLineToOldLine == 0 && getPointAt(subLine, 0).y > getPointAt(node.subLine, 0).y)
+                edge.getAnyPoint(),
+                edge.getAnyLaterPoint(),
+                node.edge.getAnyPoint(),
+                node.edge.getAnyLaterPoint());
+            if (Double.isInfinite(edge.getStartPoint().x)) {
+                if (newLineToOldLine > 0 || newLineToOldLine == 0 && getPointAt(edge, 0).y > getPointAt(node.edge, 0).y)
                     return node.top.visit(this);
                 else
                     return node.bottom.visit(this);
             } else {
                 double oldLineToPoint = Points.crossProduct(
-                    node.subLine.getAnyPoint(),
-                    node.subLine.getAnyLaterPoint(),
-                    node.subLine.getAnyPoint(),
-                    subLine.getStartPoint());
+                    node.edge.getAnyPoint(),
+                    node.edge.getAnyLaterPoint(),
+                    node.edge.getAnyPoint(),
+                    edge.getStartPoint());
                 // TODO only need to check newLineToOldLine if an endpoint can intersect another line
                 if (oldLineToPoint > 0 || oldLineToPoint == 0 && newLineToOldLine < 0)
                     return node.top.visit(this);

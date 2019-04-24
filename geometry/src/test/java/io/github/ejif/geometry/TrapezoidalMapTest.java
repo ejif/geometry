@@ -16,7 +16,7 @@ public final class TrapezoidalMapTest {
     @Test
     public void testSingleLine() {
         TrapezoidalMap map = new TrapezoidalMap(1e-6);
-        map.addLine(SubLine.builder()
+        map.addLine(DirectedEdge.builder()
             .anyPoint(new Point(0, 0))
             .dx(1)
             .dy(0)
@@ -38,14 +38,14 @@ public final class TrapezoidalMapTest {
     @Test
     public void testTwoRays() {
         TrapezoidalMap map = new TrapezoidalMap(1e-6);
-        map.addLine(SubLine.builder()
+        map.addLine(DirectedEdge.builder()
             .anyPoint(new Point(0, 0))
             .dx(1)
             .dy(0)
             .startPoint(new Point(Double.NEGATIVE_INFINITY, 0))
             .endPoint(new Point(0, 0))
             .build(), 1, 2);
-        map.addLine(SubLine.builder()
+        map.addLine(DirectedEdge.builder()
             .anyPoint(new Point(0, 0))
             .dx(1)
             .dy(1)
@@ -70,14 +70,14 @@ public final class TrapezoidalMapTest {
     @Test
     public void testTwoRaysReverseOrder() {
         TrapezoidalMap map = new TrapezoidalMap(1e-6);
-        map.addLine(SubLine.builder()
+        map.addLine(DirectedEdge.builder()
             .anyPoint(new Point(0, 0))
             .dx(1)
             .dy(0)
             .startPoint(new Point(0, 0))
             .endPoint(new Point(Double.POSITIVE_INFINITY, 0))
             .build(), 1, 2);
-        map.addLine(SubLine.builder()
+        map.addLine(DirectedEdge.builder()
             .anyPoint(new Point(0, 0))
             .dx(1)
             .dy(-1)
@@ -103,14 +103,14 @@ public final class TrapezoidalMapTest {
     @Test
     public void testNonintersectingLines() {
         TrapezoidalMap map = new TrapezoidalMap(1e-6);
-        map.addLine(SubLine.builder()
+        map.addLine(DirectedEdge.builder()
             .anyPoint(new Point(0, 0))
             .dx(1)
             .dy(0)
             .startPoint(new Point(Double.NEGATIVE_INFINITY, 0))
             .endPoint(new Point(Double.POSITIVE_INFINITY, 0))
             .build(), 2, 3);
-        map.addLine(SubLine.builder()
+        map.addLine(DirectedEdge.builder()
             .anyPoint(new Point(0, 100))
             .dx(1)
             .dy(0)
@@ -134,21 +134,21 @@ public final class TrapezoidalMapTest {
     @Test
     public void testTriangle() {
         TrapezoidalMap map = new TrapezoidalMap(1e-6);
-        map.addLine(SubLine.builder()
+        map.addLine(DirectedEdge.builder()
             .anyPoint(new Point(0, 0))
             .dx(1)
             .dy(2)
             .startPoint(new Point(0, 0))
             .endPoint(new Point(50, 100))
             .build(), 1, 3);
-        map.addLine(SubLine.builder()
+        map.addLine(DirectedEdge.builder()
             .anyPoint(new Point(100, 0))
             .dx(1)
             .dy(-2)
             .startPoint(new Point(50, 100))
             .endPoint(new Point(100, 0))
             .build(), 2, 3);
-        map.addLine(SubLine.builder()
+        map.addLine(DirectedEdge.builder()
             .anyPoint(new Point(0, 0))
             .dx(1)
             .dy(0)

@@ -265,8 +265,8 @@ public final class VoronoiBordersTest {
             .map(border -> new FlatBorder(
                 border.getLeftPointIndex(),
                 border.getRightPointIndex(),
-                border.getSubLine().getStartPoint(),
-                border.getSubLine().getEndPoint()))
+                border.getEdge().getStartPoint(),
+                border.getEdge().getEndPoint()))
             .collect(Collectors.toList());
         assertThat(flatBorders).containsExactlyInAnyOrderElementsOf(testCase.expectedBorders);
     }
