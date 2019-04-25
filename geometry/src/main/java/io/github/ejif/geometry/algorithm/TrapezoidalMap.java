@@ -115,6 +115,9 @@ public final class TrapezoidalMap {
         if (endTrapezoid.right.x != edge.getEndPoint().x)
             endTrapezoid = (Trapezoid) splitVertically(endTrapezoid, edge.getEndPoint()).left;
 
+        log.debug("Start trapezoid: {}", startTrapezoid);
+        log.debug("End trapezoid: {}", endTrapezoid);
+
         // Check if the line goes through only one trapezoid.
         if (startTrapezoid.left.x == endTrapezoid.left.x)
             startTrapezoid = endTrapezoid;
@@ -176,14 +179,10 @@ public final class TrapezoidalMap {
             }
 
         // Update all pointers.
-        if (startTrapezoid.leftTop != null) {
-            startTrapezoid.leftTop.rightTop = topTrapezoids.get(0);
-            startTrapezoid.leftTop.rightBottom = bottomTrapezoids.get(0);
-        }
-        if (startTrapezoid.leftBottom != null) {
-            startTrapezoid.leftBottom.rightTop = topTrapezoids.get(0);
-            startTrapezoid.leftBottom.rightBottom = bottomTrapezoids.get(0);
-        }
+        if (startTrapezoid.leftTop != null)
+            replaceRightTrapezoids(startTrapezoid.leftTop, startTrapezoid, topTrapezoids.get(0), bottomTrapezoids.get(0));
+        if (startTrapezoid.leftBottom != startTrapezoid.leftTop)
+            replaceRightTrapezoids(startTrapezoid.leftBottom, startTrapezoid, topTrapezoids.get(0), bottomTrapezoids.get(0));
         for (int i = 0; i < movedToRightTops.size(); i++) {
             if (topTrapezoids.get(i) != topTrapezoids.get(i + 1)) {
                 replaceLeftTrapezoid(topTrapezoids.get(i + 1), originalTrapezoids.get(i), topTrapezoids.get(i));
@@ -194,14 +193,12 @@ public final class TrapezoidalMap {
                 replaceRightTrapezoid(bottomTrapezoids.get(i), originalTrapezoids.get(i + 1), bottomTrapezoids.get(i + 1));
             }
         }
-        if (endTrapezoid.rightTop != null) {
-            endTrapezoid.rightTop.leftTop = topTrapezoids.get(topTrapezoids.size() - 1);
-            endTrapezoid.rightTop.leftBottom = bottomTrapezoids.get(bottomTrapezoids.size() - 1);
-        }
-        if (endTrapezoid.rightBottom != null) {
-            endTrapezoid.rightBottom.leftTop = topTrapezoids.get(topTrapezoids.size() - 1);
-            endTrapezoid.rightBottom.leftBottom = bottomTrapezoids.get(bottomTrapezoids.size() - 1);
-        }
+        Trapezoid endTopTrapezoid = topTrapezoids.get(movedToRightTops.size());
+        Trapezoid endBottomTrapezoid = bottomTrapezoids.get(movedToRightTops.size());
+        if (endTrapezoid.rightTop != null)
+            replaceLeftTrapezoids(endTrapezoid.rightTop, endTrapezoid, endTopTrapezoid, endBottomTrapezoid);
+        if (endTrapezoid.rightBottom != endTrapezoid.rightTop)
+            replaceLeftTrapezoids(endTrapezoid.rightBottom, endTrapezoid, endTopTrapezoid, endBottomTrapezoid);
 
         log.debug("Trapezoidal map:\n{}\n", this);
     }
@@ -242,6 +239,20 @@ public final class TrapezoidalMap {
             trapezoid.rightTop = newRight;
         if (trapezoid.rightBottom == oldRight)
             trapezoid.rightBottom = newRight;
+    }
+
+    private void replaceLeftTrapezoids(Trapezoid trapezoid, Trapezoid oldLeft, Trapezoid newLeftTop, Trapezoid newLeftBottom) {
+        if (trapezoid.leftTop == trapezoid.leftBottom || trapezoid.leftTop == oldLeft)
+            trapezoid.leftTop = newLeftTop;
+        if (trapezoid.leftBottom == trapezoid.leftTop || trapezoid.leftBottom == oldLeft)
+            trapezoid.leftBottom = newLeftBottom;
+    }
+
+    private void replaceRightTrapezoids(Trapezoid trapezoid, Trapezoid oldRight, Trapezoid newRightTop, Trapezoid newRightBottom) {
+        if (trapezoid.rightTop == trapezoid.rightBottom || trapezoid.rightTop == oldRight)
+            trapezoid.rightTop = newRightTop;
+        if (trapezoid.rightTop == trapezoid.rightBottom || trapezoid.rightBottom == oldRight)
+            trapezoid.rightBottom = newRightBottom;
     }
 
     private void replaceNode(DagNode oldNode, DagNode newNode) {

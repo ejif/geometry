@@ -126,6 +126,27 @@ public final class TrapezoidalMapTest {
 
     /**
      * <pre>
+     *     1
+     *  ._____.
+     *     2 /
+     *      / 3
+     *     ._____.
+     *        4
+     * </pre>
+     */
+    @Test
+    public void testZ() {
+        map.addEdge(DirectedEdge.segment(new Point(50, 0), new Point(100, 100)), 2, 3);
+        map.addEdge(DirectedEdge.segment(new Point(50, 0), new Point(150, 0)), 3, 4);
+        map.addEdge(DirectedEdge.segment(new Point(0, 100), new Point(100, 100)), 1, 2);
+        assertThat(map.findRegion(new Point(50, 150))).isEqualTo(1);
+        assertThat(map.findRegion(new Point(50, 50))).isEqualTo(2);
+        assertThat(map.findRegion(new Point(100, 50))).isEqualTo(3);
+        assertThat(map.findRegion(new Point(100, -50))).isEqualTo(4);
+    }
+
+    /**
+     * <pre>
      * 1 . 2
      *  / \
      * . 3 .
