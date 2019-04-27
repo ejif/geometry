@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,9 +31,10 @@ public final class VoronoiRegionsTest {
 
     @Parameterized.Parameters
     public static List<?> parameters() {
+        Random random = TestUtils.rng();
         List<List<Point>> parameters = new ArrayList<>();
         for (int i = 0; i < 10; i++)
-            parameters.add(TestUtils.randomPoints(5 + i));
+            parameters.add(TestUtils.randomPoints(5 + i, random));
         return parameters;
     }
 

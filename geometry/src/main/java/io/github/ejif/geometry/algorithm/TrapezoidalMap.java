@@ -462,17 +462,22 @@ public final class TrapezoidalMap {
 
         @Override
         public Trapezoid visitYNode(YNodeDagNode node) {
-            double newLineToOldLine = Points.crossProduct(
-                edge.getAnyPoint(),
-                edge.getAnyLaterPoint(),
-                node.edge.getAnyPoint(),
-                node.edge.getAnyLaterPoint());
             if (Double.isInfinite(edge.getStartPoint().x)) {
-                if (newLineToOldLine > 0 || newLineToOldLine == 0 && getPointAt(edge, 0).y > getPointAt(node.edge, 0).y)
+                double x = edge.getStartPoint().x == Double.POSITIVE_INFINITY
+                        ? Math.max(edge.getEndPoint().x, node.edge.getStartPoint().x) + 1
+                        : Math.min(edge.getEndPoint().x, node.edge.getEndPoint().x) - 1;
+                if (Double.isInfinite(x))
+                    x = 0;
+                if (getPointAt(edge, x).y > getPointAt(node.edge, x).y)
                     return node.top.visit(this);
                 else
                     return node.bottom.visit(this);
             } else if (edge.getStartPoint().equals(node.edge.getStartPoint()) || edge.getStartPoint().equals(node.edge.getEndPoint())) {
+                double newLineToOldLine = Points.crossProduct(
+                    edge.getAnyPoint(),
+                    edge.getAnyLaterPoint(),
+                    node.edge.getAnyPoint(),
+                    node.edge.getAnyLaterPoint());
                 if (newLineToOldLine < 0)
                     return node.top.visit(this);
                 else

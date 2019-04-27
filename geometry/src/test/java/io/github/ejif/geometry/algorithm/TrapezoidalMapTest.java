@@ -10,7 +10,7 @@ import io.github.ejif.geometry.TestUtils;
 
 public final class TrapezoidalMapTest {
 
-    private final TrapezoidalMap map = new TrapezoidalMap(TestUtils.RNG);
+    private final TrapezoidalMap map = new TrapezoidalMap(TestUtils.rng());
 
     /**
      * <pre>

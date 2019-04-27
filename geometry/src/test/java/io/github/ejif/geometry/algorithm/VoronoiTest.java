@@ -34,6 +34,6 @@ public final class VoronoiTest {
     public void testCreateVoronoiDiagram_isPerformant() {
         // Ensure that DEBUG logging, which is not performant, is disabled.
         assertThat(LoggerFactory.getLogger(Voronoi.class).isDebugEnabled()).isFalse();
-        Voronoi.createVoronoiDiagram(TestUtils.randomPoints(10000));
+        Voronoi.createVoronoiDiagram(TestUtils.randomPoints(10000, TestUtils.rng()));
     }
 }

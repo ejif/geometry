@@ -9,14 +9,24 @@ import io.github.ejif.geometry.algorithm.Points;
 
 public final class TestUtils {
 
-    public static final Random RNG = new Random(2915);
-
-    public static List<Point> randomPoints(int numPoints) {
-        return Stream.generate(TestUtils::randomPoint).limit(numPoints).collect(Collectors.toList());
+    public static Random rng() {
+        return new Random(2915);
     }
 
-    public static Point randomPoint() {
-        return new Point(RNG.nextDouble() * 1000, RNG.nextDouble() * 1000);
+    public static List<Point> randomPoints(int numPoints, Random random) {
+        return Stream.generate(() -> randomPoint(random)).limit(numPoints).collect(Collectors.toList());
+    }
+
+    public static Point randomPoint(Random random) {
+        return new Point(random.nextDouble() * 1000, random.nextDouble() * 1000);
+    }
+
+    public static List<Point> randomLatticePoints(int numPoints, Random random) {
+        return Stream.generate(() -> randomLatticePoint(random)).limit(numPoints).distinct().collect(Collectors.toList());
+    }
+
+    public static Point randomLatticePoint(Random random) {
+        return new Point(random.nextInt(10) * 100, random.nextInt(10) * 100);
     }
 
     public static Point findClosestPoint(List<Point> points, Point queryPoint) {

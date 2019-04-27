@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -22,15 +23,24 @@ public final class PointLocationBehaviorTest {
 
     @Parameterized.Parameters
     public static List<?> parameters() {
+        Random random = TestUtils.rng();
         List<TestCase> parameters = new ArrayList<>();
+
         for (int i = 0; i < 10; i++)
-            parameters.add(new TestCase(TestUtils.randomPoints(1 + i), TestUtils.randomPoints(1 + i)));
+            parameters.add(new TestCase(TestUtils.randomPoints(1 + i, random), TestUtils.randomPoints(1 + i, random)));
+        parameters.add(new TestCase(TestUtils.randomPoints(100, random), TestUtils.randomPoints(100, random)));
+
+        for (int i = 0; i < 10; i++)
+            parameters.add(new TestCase(TestUtils.randomLatticePoints(4 + i, random), TestUtils.randomPoints(4 + i, random)));
+        // TODO fix this test
+//        parameters.add(new TestCase(TestUtils.randomLatticePoints(100, random), TestUtils.randomPoints(100, random)));
+
         return parameters;
     }
 
     @Test
     public void testPointLocation_behavesCorrectly() {
-        PointLocation pointLocation = new PointLocation(testCase.anchorPoints, TestUtils.RNG);
+        PointLocation pointLocation = new PointLocation(testCase.anchorPoints, TestUtils.rng());
         for (Point p : testCase.queryPoints)
             assertThat(pointLocation.findClosestPoint(p)).isEqualTo(TestUtils.findClosestPoint(testCase.anchorPoints, p));
     }
