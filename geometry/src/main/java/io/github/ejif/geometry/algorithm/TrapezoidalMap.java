@@ -15,10 +15,8 @@ import com.google.common.base.Strings;
 
 import io.github.ejif.geometry.DirectedEdge;
 import io.github.ejif.geometry.Point;
-import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 
 public final class TrapezoidalMap {
 
@@ -107,21 +105,24 @@ public final class TrapezoidalMap {
         assert edge.getStartPoint() != null;
         assert edge.getEndPoint() != null;
 
+        // First split the trapezoid containing the left end-point vertically on that end-point. Do
+        // the same for the trapezoid containing the right end-point.
         Trapezoid startTrapezoid = root.visit(new FindTrapezoidDagNodeVisitor(edge));
         if (startTrapezoid.left.x != edge.getStartPoint().x)
             startTrapezoid = (Trapezoid) splitVertically(startTrapezoid, edge.getStartPoint()).right;
-
         Trapezoid endTrapezoid = root.visit(new FindTrapezoidDagNodeVisitor(edge.flip()));
         if (endTrapezoid.right.x != edge.getEndPoint().x)
             endTrapezoid = (Trapezoid) splitVertically(endTrapezoid, edge.getEndPoint()).left;
-
         log.debug("Start trapezoid: {}", startTrapezoid);
         log.debug("End trapezoid: {}", endTrapezoid);
 
-        // Check if the line goes through only one trapezoid.
+        // If the edge goes through only one trapezoid, then the start trapezoid got split
+        // vertically by the right end-point as well, so needs to be updated.
         if (startTrapezoid.left.x == endTrapezoid.left.x)
             startTrapezoid = endTrapezoid;
 
+        // Split every trapezoid (from the start trapezoid to the end trapezoid) horizontally,
+        // along the inserted edge.
         List<Trapezoid> originalTrapezoids = new ArrayList<>();
         List<Trapezoid> topTrapezoids = new ArrayList<>();
         List<Trapezoid> bottomTrapezoids = new ArrayList<>();
@@ -143,7 +144,7 @@ public final class TrapezoidalMap {
             if (currentTrapezoid == endTrapezoid)
                 break;
 
-            // Update the trapezoid pointers, and then find the next trapezoid on the right.
+            // Figure out whether to move to the top right trapezoid or the bottom right trapezoid.
             Point rightIntersection = getPointAt(edge, currentTrapezoid.right.x);
             if (rightIntersection.y > currentTrapezoid.right.y && currentTrapezoid.rightTop != null) {
                 currentTrapezoid = currentTrapezoid.rightTop;
@@ -152,52 +153,58 @@ public final class TrapezoidalMap {
                 currentTrapezoid = currentTrapezoid.rightBottom;
                 movedToRightTops.add(false);
             } else {
-                // This cannot happen because only the end of the edge can intersect another line,
-                // but then we would have broken out of the loop above.
+                // This means the inserted edge intersects the end-point of another line, but that
+                // can only happen at the right end-point of the inserted edge, so we should have
+                // already broken out of the loop above.
                 assert false;
             }
         }
 
-        // Merge trapezoids.
-        for (int i = 0; i < movedToRightTops.size(); i++)
-            if (movedToRightTops.get(i)) {
-                Trapezoid mergedTrapezoid = topTrapezoids.get(i).toBuilder()
-                    .right(topTrapezoids.get(i + 1).right)
-                    .build();
-                replaceNode(topTrapezoids.get(i), mergedTrapezoid);
-                replaceNode(topTrapezoids.get(i + 1), mergedTrapezoid);
-                topTrapezoids.set(i, mergedTrapezoid);
-                topTrapezoids.set(i + 1, mergedTrapezoid);
-            } else {
-                Trapezoid mergedTrapezoid = bottomTrapezoids.get(i).toBuilder()
-                    .right(bottomTrapezoids.get(i + 1).right)
-                    .build();
-                replaceNode(bottomTrapezoids.get(i), mergedTrapezoid);
-                replaceNode(bottomTrapezoids.get(i + 1), mergedTrapezoid);
-                bottomTrapezoids.set(i, mergedTrapezoid);
-                bottomTrapezoids.set(i + 1, mergedTrapezoid);
+        // Merge the split trapezoids. If the inserted edge moved to the top right trapezoid, then
+        // the inserted edge blocks the boundary from the point below, so the two top trapezoids
+        // can be merged (similarly for merging the bottom two trapezoids).
+        for (int startIndex = 0; startIndex < movedToRightTops.size(); startIndex++) {
+            boolean movedToRightTop = movedToRightTops.get(startIndex);
+            int endIndex = startIndex + 1;
+            while (endIndex < movedToRightTops.size() && movedToRightTops.get(endIndex) == movedToRightTop)
+                endIndex++;
+            List<Trapezoid> trapezoids = movedToRightTop ? topTrapezoids : bottomTrapezoids;
+            Trapezoid mergedTrapezoid = trapezoids.get(startIndex).toBuilder()
+                .right(trapezoids.get(endIndex).right)
+                .rightTop(trapezoids.get(endIndex).rightTop)
+                .rightBottom(trapezoids.get(endIndex).rightBottom)
+                .build();
+            for (int i = startIndex; i <= endIndex; i++) {
+                replaceNode(trapezoids.get(i), mergedTrapezoid);
+                trapezoids.set(i, mergedTrapezoid);
             }
+            startIndex = endIndex + 1;
+        }
 
-        // Update all pointers.
+        // Update all trapezoid pointers.
         if (startTrapezoid.leftTop != null)
             replaceRightTrapezoids(startTrapezoid.leftTop, startTrapezoid, topTrapezoids.get(0), bottomTrapezoids.get(0));
-        if (startTrapezoid.leftBottom != startTrapezoid.leftTop)
+        if (startTrapezoid.leftBottom != null)
             replaceRightTrapezoids(startTrapezoid.leftBottom, startTrapezoid, topTrapezoids.get(0), bottomTrapezoids.get(0));
         for (int i = 0; i < movedToRightTops.size(); i++) {
             if (topTrapezoids.get(i) != topTrapezoids.get(i + 1)) {
                 replaceLeftTrapezoid(topTrapezoids.get(i + 1), originalTrapezoids.get(i), topTrapezoids.get(i));
                 replaceRightTrapezoid(topTrapezoids.get(i), originalTrapezoids.get(i + 1), topTrapezoids.get(i + 1));
+                replaceLeftTrapezoid(topTrapezoids.get(i).rightTop, originalTrapezoids.get(i), topTrapezoids.get(i));
+                replaceRightTrapezoid(topTrapezoids.get(i + 1).leftTop, originalTrapezoids.get(i + 1), topTrapezoids.get(i + 1));
             }
             if (bottomTrapezoids.get(i) != bottomTrapezoids.get(i + 1)) {
                 replaceLeftTrapezoid(bottomTrapezoids.get(i + 1), originalTrapezoids.get(i), bottomTrapezoids.get(i));
                 replaceRightTrapezoid(bottomTrapezoids.get(i), originalTrapezoids.get(i + 1), bottomTrapezoids.get(i + 1));
+                replaceLeftTrapezoid(bottomTrapezoids.get(i).rightBottom, originalTrapezoids.get(i), bottomTrapezoids.get(i));
+                replaceRightTrapezoid(bottomTrapezoids.get(i + 1).leftBottom, originalTrapezoids.get(i + 1), bottomTrapezoids.get(i + 1));
             }
         }
         Trapezoid endTopTrapezoid = topTrapezoids.get(movedToRightTops.size());
         Trapezoid endBottomTrapezoid = bottomTrapezoids.get(movedToRightTops.size());
         if (endTrapezoid.rightTop != null)
             replaceLeftTrapezoids(endTrapezoid.rightTop, endTrapezoid, endTopTrapezoid, endBottomTrapezoid);
-        if (endTrapezoid.rightBottom != endTrapezoid.rightTop)
+        if (endTrapezoid.rightBottom != null)
             replaceLeftTrapezoids(endTrapezoid.rightBottom, endTrapezoid, endTopTrapezoid, endBottomTrapezoid);
 
         log.debug("Trapezoidal map:\n{}\n", this);
@@ -228,30 +235,24 @@ public final class TrapezoidalMap {
     }
 
     private void replaceLeftTrapezoid(Trapezoid trapezoid, Trapezoid oldLeft, Trapezoid newLeft) {
-        if (trapezoid.leftTop == oldLeft)
-            trapezoid.leftTop = newLeft;
-        if (trapezoid.leftBottom == oldLeft)
-            trapezoid.leftBottom = newLeft;
+        replaceLeftTrapezoids(trapezoid, oldLeft, newLeft, newLeft);
     }
 
     private void replaceRightTrapezoid(Trapezoid trapezoid, Trapezoid oldRight, Trapezoid newRight) {
-        if (trapezoid.rightTop == oldRight)
-            trapezoid.rightTop = newRight;
-        if (trapezoid.rightBottom == oldRight)
-            trapezoid.rightBottom = newRight;
+        replaceRightTrapezoids(trapezoid, oldRight, newRight, newRight);
     }
 
     private void replaceLeftTrapezoids(Trapezoid trapezoid, Trapezoid oldLeft, Trapezoid newLeftTop, Trapezoid newLeftBottom) {
-        if (trapezoid.leftTop == trapezoid.leftBottom || trapezoid.leftTop == oldLeft)
+        if (trapezoid.leftTop == oldLeft)
             trapezoid.leftTop = newLeftTop;
-        if (trapezoid.leftBottom == trapezoid.leftTop || trapezoid.leftBottom == oldLeft)
+        if (trapezoid.leftBottom == oldLeft)
             trapezoid.leftBottom = newLeftBottom;
     }
 
     private void replaceRightTrapezoids(Trapezoid trapezoid, Trapezoid oldRight, Trapezoid newRightTop, Trapezoid newRightBottom) {
-        if (trapezoid.rightTop == trapezoid.rightBottom || trapezoid.rightTop == oldRight)
+        if (trapezoid.rightTop == oldRight)
             trapezoid.rightTop = newRightTop;
-        if (trapezoid.rightTop == trapezoid.rightBottom || trapezoid.rightBottom == oldRight)
+        if (trapezoid.rightBottom == oldRight)
             trapezoid.rightBottom = newRightBottom;
     }
 
@@ -350,7 +351,6 @@ public final class TrapezoidalMap {
     }
 
     @Data
-    @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
     private static final class YNodeDagNode implements DagNode {
 
         final int id = nodeId.incrementAndGet();
