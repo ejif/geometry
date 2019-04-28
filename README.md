@@ -7,12 +7,12 @@ This Java library provides an efficient algorithm for point location: given N po
 Usage:
 
         import io.github.ejif.geometry.Point;
-        import io.github.ejif.geometry.algorithm.PointLocation;
+        import io.github.ejif.geometry.algorithm.PointSet;
 
         List<Point> points = /* points */
         Point query = /* query point */
-        PointLocation pointLocation = new PointLocation(points);
-        Point closestPoint = pointLocation.findClosestPoint(query);
+        PointSet pointSet = new PointSet(points);
+        Point closestPoint = pointSet.findClosestPoint(query);
 
 This library is [extensively tested](geometry/src/test/java/io/github/ejif/geometry/algorithm) for both randomized point configurations and discrete point configurations with collinear and concyclic points. There are no arbitrary floating point scale requirements (e.g. checks for whether two points are within `EPSILON = 1e-6`), so this library supports points at any scale.
 

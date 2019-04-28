@@ -12,27 +12,24 @@ import com.google.common.collect.ImmutableList;
 import io.github.ejif.geometry.Point;
 import io.github.ejif.geometry.VoronoiDiagram.Border;
 
-public final class PointLocation {
+public final class PointSet {
 
     private final List<Point> points;
     private final TrapezoidalMap trapezoidalMap;
 
     /**
-     * Generates a PointLocation object among the given anchor points to answer the following query
-     * efficiently in log n time: which of the anchor points is closest to a particular point P?
+     * Creates an object encapsulating a set of n points, indexed for efficient point location
+     * queries.
      *
      * @param points
      *            the set of points
      */
-    public PointLocation(List<Point> points) {
+    public PointSet(List<Point> points) {
         this(points, new Random());
     }
 
     @VisibleForTesting
-    PointLocation(List<Point> points, Random random) {
-        if (points.isEmpty())
-            throw new IllegalArgumentException("Cannot generate PointLocation object with no points.");
-
+    PointSet(List<Point> points, Random random) {
         this.points = ImmutableList.copyOf(points);
         this.trapezoidalMap = new TrapezoidalMap(random);
 
@@ -52,8 +49,11 @@ public final class PointLocation {
      * @param point
      *            a point
      * @return the anchor point closest to the point
+     * @throws IllegalArgumentException if the point set contains no points
      */
-    public Point findClosestPoint(Point point) {
+    public Point findClosestPoint(Point point) throws IllegalArgumentException {
+        if (points.isEmpty())
+            throw new IllegalArgumentException("Point set contains no points.");
         if (points.size() == 1)
             return points.get(0);
 

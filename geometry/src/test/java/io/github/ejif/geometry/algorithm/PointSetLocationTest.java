@@ -17,7 +17,7 @@ import lombok.Data;
 
 @Data
 @RunWith(Parameterized.class)
-public final class PointLocationBehaviorTest {
+public final class PointSetLocationTest {
 
     private final TestCase testCase;
 
@@ -38,10 +38,10 @@ public final class PointLocationBehaviorTest {
     }
 
     @Test
-    public void testPointLocation_behavesCorrectly() {
-        PointLocation pointLocation = new PointLocation(testCase.anchorPoints, TestUtils.rng());
+    public void testFindClosestPoint_isCorrect() {
+        PointSet points = new PointSet(testCase.anchorPoints, TestUtils.rng());
         for (Point p : testCase.queryPoints)
-            assertThat(pointLocation.findClosestPoint(p)).isEqualTo(TestUtils.findClosestPoint(testCase.anchorPoints, p));
+            assertThat(points.findClosestPoint(p)).isEqualTo(TestUtils.findClosestPoint(testCase.anchorPoints, p));
     }
 
     @Data
