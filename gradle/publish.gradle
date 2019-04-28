@@ -1,3 +1,6 @@
+// To upload to Nexus: ./gradlew uploadArchives
+// To release: ./gradlew closeAndReleaseRepository
+
 apply plugin: 'maven'
 apply plugin: 'signing'
 
