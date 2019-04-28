@@ -36,7 +36,7 @@ public final class Voronoi {
     /**
      * Computes the Voronoi diagram of the given points using Fortune's algorithm. See
      * http://www.cs.sfu.ca/~binay/813.2011/Fortune.pdf. The resulting borders will all satisfy
-     * leftPointIndex < rightPointIndex.
+     * leftPointIndex &lt; rightPointIndex.
      *
      * @param points
      *            the points to compute Fortune's algorithm for
