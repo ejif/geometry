@@ -18,6 +18,10 @@ import io.github.ejif.geometry.Point;
 import lombok.Builder;
 import lombok.Data;
 
+/**
+ * Implements the trapezoidal map described in
+ * https://www.ti.inf.ethz.ch/ew/lehre/CG12/lecture/Chapter%209.pdf.
+ */
 public final class TrapezoidalMap {
 
     private static final Logger log = LoggerFactory.getLogger(Voronoi.class);
@@ -41,6 +45,9 @@ public final class TrapezoidalMap {
             .left(new Point(Double.NEGATIVE_INFINITY, 0))
             .right(new Point(Double.POSITIVE_INFINITY, 0))
             .build();
+        // We use a small shear for simplicity when testing, but there is no requirement that
+        // end-points need to be at least 1e-6 away from each other; the entire plane is sheared
+        // the same amount anyway.
         this.shear = random.nextDouble() * 1e-6;
     }
 
