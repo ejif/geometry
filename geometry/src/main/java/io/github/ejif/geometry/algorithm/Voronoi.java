@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
-import java.util.TreeSet;
+import java.util.TreeMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -80,7 +80,7 @@ public final class Voronoi {
                     : findIntersection(xs, points.get(arc.next.pointIndex), currPoint);
             return new Interval(min, max);
         };
-        TreeSet<Arc> arcs = new TreeSet<>(Comparator.comparing(getInterval));
+        TreeMap<Arc, Arc> arcs = new TreeMap<>(Comparator.comparing(getInterval));
 
         /**
          * For any arc on the beachline surrounded by an arc before and after it, add a vertex event
@@ -109,15 +109,15 @@ public final class Voronoi {
                 return;
             List<String> arcStrings = new ArrayList<>();
             if (!arcs.isEmpty())
-                for (Arc arc = arcs.first(); arc != null; arc = arc.next)
+                for (Arc arc = arcs.firstKey(); arc != null; arc = arc.next)
                     arcStrings.add(String.format("%s %s", arc, getInterval.apply(arc)));
             log.debug("Arcs at {}: {}", sweepX.get(), Joiner.on(", ").join(arcStrings));
             log.debug("Arcs: {}", arcs);
 
             int count = 0;
             if (!arcs.isEmpty())
-                for (Arc arc = arcs.first(); arc != null; arc = arc.next) {
-                    assert arcs.contains(arc);
+                for (Arc arc = arcs.firstKey(); arc != null; arc = arc.next) {
+                    assert arcs.containsKey(arc);
                     if (arc.prev != null)
                         assert arc.prev.next == arc;
                     if (arc.next != null)
@@ -143,7 +143,7 @@ public final class Voronoi {
                     .pointIndex(event.pointIndex)
                     .build();
                 sweepX.set(event.x);
-                Arc prev = arcs.lower(arc);
+                Arc prev = arcs.lowerKey(arc);
                 if (prev != null && getInterval.apply(prev).strictlyIncludes(getInterval.apply(arc))) {
                     Arc next = prev.toBuilder()
                         .prev(arc)
@@ -153,15 +153,15 @@ public final class Voronoi {
                     prev.next = arc;
                     if (next.next != null)
                         next.next.prev = next;
-                    arcs.add(arc);
-                    arcs.add(next);
+                    arcs.put(arc, arc);
+                    arcs.put(next, next);
                 } else if (prev != null && prev.next != null) {
                     // point.y is exactly between two existing intervals.
                     arc.prev = prev;
                     arc.next = prev.next;
                     prev.next = arc;
                     arc.next.prev = arc;
-                    arcs.add(arc);
+                    arcs.put(arc, arc);
 
                     // If the points are not collinear, there is a vertex right here.
                     Point pp = points.get(arc.prev.pointIndex);
@@ -173,12 +173,12 @@ public final class Voronoi {
                     }
                 } else {
                     arc.prev = prev;
-                    arc.next = prev == null ? (arcs.isEmpty() ? null : arcs.first()) : prev.next;
+                    arc.next = prev == null ? (arcs.isEmpty() ? null : arcs.firstKey()) : prev.next;
                     if (arc.prev != null)
                         arc.prev.next = arc;
                     if (arc.next != null)
                         arc.next.prev = arc;
-                    arcs.add(arc);
+                    arcs.put(arc, arc);
                 }
 
                 /**
@@ -194,7 +194,8 @@ public final class Voronoi {
                 VertexEvent event = (VertexEvent) e;
                 Arc toRemove = event.toRemove;
                 // If this arc was already removed by another vertex event, then ignore it.
-                if (arcs.remove(toRemove)) {
+                if (toRemove.equals(arcs.get(toRemove))) {
+                    arcs.remove(toRemove);
                     if (toRemove.prev != null)
                         toRemove.prev.next = toRemove.next;
                     if (toRemove.next != null)
@@ -270,7 +271,7 @@ public final class Voronoi {
         if (borders.isEmpty() && !arcs.isEmpty()) {
             // Special case: all points are collinear; add a line between each adjacent two points.
             Set<Integer> pointIndices = new HashSet<>();
-            for (Arc arc = arcs.first(); arc != null && !pointIndices.contains(arc.pointIndex); arc = arc.next) {
+            for (Arc arc = arcs.firstKey(); arc != null && !pointIndices.contains(arc.pointIndex); arc = arc.next) {
                 pointIndices.add(arc.pointIndex);
                 if (arc.next != null) {
                     int leftPointIndex = Math.min(arc.pointIndex, arc.next.pointIndex);

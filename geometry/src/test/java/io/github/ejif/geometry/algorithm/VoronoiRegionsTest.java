@@ -35,6 +35,8 @@ public final class VoronoiRegionsTest {
         List<List<Point>> parameters = new ArrayList<>();
         for (int i = 0; i < 10; i++)
             parameters.add(TestUtils.randomPoints(5 + i, random));
+        for (int i = 0; i < 10; i++)
+            parameters.add(TestUtils.randomLatticePoints(5 + i, random));
         return parameters;
     }
 

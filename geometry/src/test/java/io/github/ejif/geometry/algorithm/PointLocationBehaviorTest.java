@@ -32,8 +32,7 @@ public final class PointLocationBehaviorTest {
 
         for (int i = 0; i < 10; i++)
             parameters.add(new TestCase(TestUtils.randomLatticePoints(4 + i, random), TestUtils.randomPoints(4 + i, random)));
-        // TODO fix this test
-//        parameters.add(new TestCase(TestUtils.randomLatticePoints(100, random), TestUtils.randomPoints(100, random)));
+        parameters.add(new TestCase(TestUtils.randomLatticePoints(100, random), TestUtils.randomPoints(100, random)));
 
         return parameters;
     }
