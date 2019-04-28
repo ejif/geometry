@@ -22,8 +22,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.util.concurrent.AtomicDouble;
 
-import io.github.ejif.geometry.Point;
 import io.github.ejif.geometry.DirectedEdge;
+import io.github.ejif.geometry.Point;
 import io.github.ejif.geometry.VoronoiDiagram;
 import io.github.ejif.geometry.VoronoiDiagram.Border;
 import lombok.Builder;
@@ -44,7 +44,8 @@ public final class Voronoi {
      */
     public static VoronoiDiagram createVoronoiDiagram(List<Point> points) {
         // Maintain a priority queue of events as we move the sweep line from left to right.
-        PriorityQueue<Event> events = new PriorityQueue<>(Comparator.comparing(Event::getX));
+        // Process vertex events (removing an arc) before processing point events on the same line.
+        PriorityQueue<Event> events = new PriorityQueue<>(Comparator.comparing(Event::getX).thenComparing(Event::getTiebreak));
         for (int pointIndex = 0; pointIndex < points.size(); pointIndex++) {
             events.add(PointEvent.builder()
                 .x(points.get(pointIndex).x)
@@ -328,6 +329,7 @@ public final class Voronoi {
     private interface Event {
 
         double getX();
+        int getTiebreak();
     }
 
     @Builder
@@ -335,6 +337,7 @@ public final class Voronoi {
     private static class PointEvent implements Event {
 
         final double x;
+        final int tiebreak = 1;
         final int pointIndex;
     }
 
@@ -343,6 +346,7 @@ public final class Voronoi {
     private static class VertexEvent implements Event {
 
         final double x;
+        final int tiebreak = 0;
         final Arc toRemove;
         final Point circumcenter;
     }

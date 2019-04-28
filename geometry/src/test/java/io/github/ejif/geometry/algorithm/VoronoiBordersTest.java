@@ -171,6 +171,29 @@ public final class VoronoiBordersTest {
 
             /**
              * <pre>
+             * \ 0 /
+             *  \ /
+             * 1 . 2
+             *  / \
+             * / 3 \
+             * </pre>
+             */
+            .add(new TestCase(
+                ImmutableList.<Point> builder()
+                    .add(new Point(50, 100))
+                    .add(new Point(0, 50))
+                    .add(new Point(100, 50))
+                    .add(new Point(50, 0))
+                    .build(),
+                ImmutableList.<FlatBorder> builder()
+                    .add(new FlatBorder(0, 1, null, new Point(50, 50)))
+                    .add(new FlatBorder(0, 2, new Point(50, 50), null))
+                    .add(new FlatBorder(1, 3, null, new Point(50, 50)))
+                    .add(new FlatBorder(2, 3, new Point(50, 50), null))
+                    .build()))
+
+            /**
+             * <pre>
              *    |   |   |   |
              *  2 | 4 | 3 | 0 | 1
              *    |   |   |   |
