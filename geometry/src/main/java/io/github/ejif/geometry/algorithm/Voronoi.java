@@ -94,7 +94,7 @@ public final class Voronoi {
             // The cross product must be positive, otherwise this arc will never collapse into a point.
             if (Points.crossProduct(point, prevPoint, point, nextPoint) <= 0)
                 return;
-            Point circumcenter = Points.circumcenter(prevPoint, point, nextPoint);
+            Point circumcenter = Points.circumcenter(point, prevPoint, nextPoint);
             events.add(VertexEvent.builder()
                 .x(circumcenter.x + Points.distance(point, circumcenter))
                 .toRemove(arc)

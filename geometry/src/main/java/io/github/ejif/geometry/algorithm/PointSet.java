@@ -43,6 +43,15 @@ public final class PointSet {
     }
 
     /**
+     * Get the points of this point set.
+     *
+     * @return the list of points
+     */
+    public List<Point> getPoints() {
+        return points;
+    }
+
+    /**
      * Finds the closest anchor point to the given point. If there are multiple closest points, an
      * arbitrary one is returned.
      *
